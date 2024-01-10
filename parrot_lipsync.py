@@ -44,6 +44,8 @@ import whisper_timestamped as whisper
 from phonemizer.backend import EspeakBackend
 from phonemizer.punctuation import Punctuation
 from phonemizer.separator import Separator
+from phonemizer.backend.espeak.wrapper import EspeakWrapper
+
 import json
 
 
@@ -78,7 +80,7 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
                ('base.en', 'base.en', 'english only - vram ~1GB, speed 16x'),
                ('small.en', 'small.en', 'english only - vram ~2GB, speed 6x'),
                ('medium.en', 'medium.en', 'english only - vram ~5GB, speed 2x'),],
-        default='tiny'
+        default='base'
     )
     autodetect_language: bpy.props.BoolProperty(
         name="Auto detect language",
@@ -90,6 +92,7 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
         default="en"
     )
+
 
  
 #------------------------------------------
@@ -108,10 +111,13 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 
         system_setting_column = layout.column()
 
-        system_setting_column.prop(manage_props, "espeak_path")
+        #system_setting_column.prop(manage_props, "espeak_path")
         system_setting_column.prop(manage_props, "whisper_library_model")
         system_setting_column.prop(manage_props, "autodetect_language")
-        system_setting_column.prop(manage_props, "language_code")
+        
+        row = system_setting_column.row()
+        row.enabled = not manage_props.autodetect_language
+        row.prop(manage_props, "language_code")
 
         system_setting_column.operator("plugin.parrot_lipsync_generator")
 
@@ -129,12 +135,21 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
     def execute(self, context):
         manage_props = context.scene.manage_props
         
+        #espeak_path = manage_props.espeak_path
         whisper_library_model = manage_props.whisper_library_model
         autodetect_language = manage_props.autodetect_language
         language_code = manage_props.language_code
         
         model = whisper.load_model(whisper_library_model)
-            
+        
+        #EspeakWrapper.set_library(espeak_path)
+        # initialize the espeak backend for English
+        #backend = EspeakBackend('en-us')
+
+        # separate phones by a space and ignoring words boundaries
+        #separator = Separator(phone=' ', word=None)
+           
+        
         for seq in context.scene.sequence_editor.sequences_all:
             if seq.type != 'SOUND' or not seq.select:
                 continue
@@ -143,13 +158,13 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
 #            print("Processing ", path)
             
             audio = whisper.load_audio(path)
-            audio = whisper.pad_or_trim(audio)
+            audio_shaped = whisper.pad_or_trim(audio)
             
             final_language_code = language_code
             
             if autodetect_language:
                 # make log-Mel spectrogram and move to the same device as the model
-                mel = whisper.log_mel_spectrogram(audio).to(model.device)
+                mel = whisper.log_mel_spectrogram(audio_shaped).to(model.device)
 
                 # detect the spoken language
                 _, probs = model.detect_language(mel)
@@ -157,17 +172,41 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                 final_language_code = max(probs, key=probs.get)
 
             
-            result = whisper.transcribe(model, audio, language=final_language_code)
+            whisper_result = whisper.transcribe(model, audio, language=final_language_code)
 
-            print(json.dumps(result, indent = 2, ensure_ascii = False))
+            #print(json.dumps(whisper_result, indent = 2, ensure_ascii = False))
+            
+            print("Parsing track: ", seq.name)
+            print("Audio source: ", path)
+            print("Text: ", whisper_result["text"])
+
+            #TODO: Need to figure out how to choose proper language library
+#            espeak_backend = EspeakBackend(final_language_code)
+            
+            word_list = []
+            for seg in whisper_result["segments"]:
+                for word in seg["words"]:
+                    word_list.append(word["text"])
+                    print("word %s %f %f" % (word["text"], word["start"], word["end"]))
+                    word["text"]
+                    word["start"]
+                    word["end"]
+            
+            
+            espeak_backend = EspeakBackend("en-us")
+            espeak_separator = Separator(phone=' ', word=None)
+            
+            phonemes = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)
+            print(phonemes)
+
             
             #_, probs = model.detect_language(mel)
             #print(f"Detected language: {max(probs, key=probs.get)}")
  
 ####
  
-            print("Processing ", seq.name)
-            print("Processing ", seq.sound.filepath)
+            #print("Processing ", seq.name)
+            #print("Processing ", seq.sound.filepath)
             
             #bpy.data.sounds
             

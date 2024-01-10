@@ -9,7 +9,18 @@ You will need to have eSpeak installed on your system for Parrot Lipsync to work
 
 https://github.com/espeak-ng/espeak-ng/blob/master/docs/guide.md
 
-## Acknoledgements
+The addon should automatically install Whisper if it is not already installed - however, if you wish to install Whisper manually, open a terminal window and go into your Blender installation's python directory (on Windows it should be something like `C:\Program Files\Blender Foundation\Blender 4.0\4.0\python\bin`).  Then issue the following commands:
+
+```
+python.exe -m pip install --upgrade whisper_timestamped
+python.exe -m pip install --upgrade phonemizer
+```
+
+You can install the addon by opening Blender's Edit/Preferences menu, opening the Addons section, clicking the Install button and then browsing to the parrot_lipsync.py file.  Once installed, make sure that you check the box to enable it.  It should now appear in the viewport right hand tab menu.
+
+Before you can use the addon, you need to set the path where it can find the eSpeak library file.  On windows this will be the `libespeak-ng.dll` file which has a default install location of `C:\Program Files\eSpeak NG\libespeak-ng.dll`.
+
+## Acknowledgements
 
 Whisper AI
 https://github.com/openai/whisper

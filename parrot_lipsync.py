@@ -71,7 +71,7 @@ def update_phoneme_group_pose_list(context):
     group_list = [info["group"] for info in phoneme_table["phonemes"]]
     group_list = list(dict.fromkeys(group_list))
     group_list.sort()
-    group_list.append("rest")
+    group_list.insert(0, "rest")
     
     groups_already_listed = [p.group for p in context.scene.props.phoneme_poses]
     #context.scene.props.phoneme_poses.clear()
@@ -213,24 +213,30 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
         layout = self.layout
 
         phoneme_table = load_phoneme_table(context)
-
+        
+        group_hash = {}
+        for group_info in phoneme_table["groups"]:
+            name = group_info["name"]
+            #print("draw group name ", name, " ", group_info)
+            group_hash[name] = group_info
+#            group_hash[name] = "eee"
+        
+#        print("**hash: " , group_hash)
         main_column = layout.column()
-        
-        
+       
         for pose_props in props.phoneme_poses:
-            row = main_column.row()
-            row.prop(pose_props, "group")
+            box = main_column.box()
+            row = box.row()
+            group = str(pose_props.group)
+            #print("draw group name-- ", group)
+            row.label(text = group)
+            #row.prop(pose_props, "group")
             row.prop(pose_props, "pose")
+            #print("**hash: ", group, " " , group_hash)
+#           print(group_hash)
+            desc_text = group_hash[group]["description"] if group in group_hash else ""
+            box.label(text = desc_text)
         
-        main_column.label(text="first row")
-        
-        # for info in phoneme_table["phonemes"]:
-            # #print("info ", info)
-            # row = main_column.row()
-            
-            # part_list = [" " + p.upper() + " " if (idx & 1) else p for idx, p in enumerate(info["example"].split("*"))]
-            # example_text = "".join(part_list)
-            # row.label(text="%s %s " % (info["code"], example_text))
             
 
 #------------------------------------------
@@ -368,8 +374,11 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                         continue
                     
                     pose_action = group_pose_hash[group_name]
+                    if not pose_action:
+                        continue
                     
-            
+                    for curve in pose_action.fcurves:
+                        print(curve.data_path, curve.array_index)
                 
 
             

@@ -2,51 +2,51 @@
     "groups": [
         {
             "name":"A",
-            "info":"a e i"
+            "description":"a e i"
         },
         {
             "name":"L",
-            "info":"l"
+            "description":"l"
         },
         {
             "name":"W",
-            "info":"Q W"
+            "description":"q w"
         },
         {
             "name":"C",
-            "info":"c d g k r s t x z"
+            "description":"c d g k r s t x z"
         },
         {
             "name":"TH",
-            "info":"th"
+            "description":"th"
         },
         {
             "name":"N",
-            "info":"n"
+            "description":"n"
         },
         {
             "name":"M",
-            "info":"b m p"
+            "description":"b m p"
         },
         {
             "name":"F",
-            "info":"f v"
+            "description":"f v"
         },
         {
             "name":"EE",
-            "info":"ee"
+            "description":"ee"
         },
         {
             "name":"O",
-            "info":"o"
+            "description":"o"
         },
         {
             "name":"U",
-            "info":"u"
+            "description":"u"
         },
         {
             "name":"SH",
-            "info":"j ch sh"
+            "description":"j ch sh"
         }
     ],
 

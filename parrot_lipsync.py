@@ -60,8 +60,56 @@ def install_whisper():
     #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
     subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
     
+def update_phoneme_table_path(self, context):
+    print("--update_phoneme_table_path")
+    pass
+ 
+def update_phoneme_group_pose_list(context):
+    print("--update_phoneme_table_path")
+    phoneme_table = load_phoneme_table(context)
+    
+    group_list = [info["group"] for info in phoneme_table["phonemes"]]
+    group_list = list(dict.fromkeys(group_list))
+    group_list.sort()
+    group_list.append("rest")
+    
+    groups_already_listed = [p.group for p in context.scene.props.phoneme_poses]
+    #context.scene.props.phoneme_poses.clear()
+    
+    remove_indices = []
+    for idx, item in enumerate(context.scene.props.phoneme_poses):
+        if not item.group in group_list:
+            remove_indices.append(idx)
+    
+    remove_indices.reverse()
+    for idx in remove_indices:
+        context.scene.props.phoneme_poses.remove(idx)
+    
+    for group_name in group_list:
+        if not group_name in groups_already_listed:
+            pose_props = context.scene.props.phoneme_poses.add()
+            pose_props.group = group_name
+            pose_props.pose = "foo"
+    pass
+
+
+def load_phoneme_table(context):
+    props = context.scene.props
+    phoneme_table_path = props.phoneme_table_path
+    with open(bpy.path.abspath(phoneme_table_path)) as f:
+        phoneme_table = json.load(f)
+        return phoneme_table
+
 #------------------------------------------
 # Properties
+
+class ParrotPoseProps(bpy.types.PropertyGroup):
+    group: bpy.props.StringProperty(
+        name="Group name",
+    )
+    pose: bpy.props.StringProperty(
+        name="Pose name",
+    )
 
 class ParrotLipsyncProps(bpy.types.PropertyGroup):
     espeak_path: bpy.props.StringProperty(
@@ -96,10 +144,20 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         name="Phoneme table file",
         default='//phoneme_table_en.json',
         subtype='FILE_PATH',
+        update=update_phoneme_table_path,
     )
+    phoneme_poses: bpy.props.CollectionProperty(
+        name="Phoneme poses",
+        description="Mouth poses",
+        type=ParrotPoseProps
+    )
+    armature: bpy.props.PointerProperty(
+        name = "Armature",
+        description = "Armature you wish to apply lipsync to.",
+        type=bpy.types.Armature
+    )
+#cameraList:bpy.props.CollectionProperty(type=myPointerCollectionLs)
 
-
- 
 #------------------------------------------
 # Panel
 
@@ -113,9 +171,12 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 
     def draw(self, context):
         props = context.scene.props
+        
         layout = self.layout
 
         main_column = layout.column()
+
+        main_column.prop(props, "armature")
 
         main_column.prop(props, "espeak_path")
         main_column.prop(props, "whisper_library_model")
@@ -144,27 +205,27 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
 
         main_column = layout.column()
         
-        row = main_column.row()
-        row.label(text="first row")
         
-        for info in phoneme_table["phonemes"]:
-            #print("info ", info)
+        for pose_props in props.phoneme_poses:
             row = main_column.row()
+            row.prop(pose_props, "group")
+            row.prop(pose_props, "pose")
+        
+        main_column.label(text="first row")
+        
+        # for info in phoneme_table["phonemes"]:
+            # #print("info ", info)
+            # row = main_column.row()
             
-            part_list = [" " + p.upper() + " " if (idx & 1) else p for idx, p in enumerate(info["example"].split("*"))]
-            example_text = "".join(part_list)
-            row.label(text="%s %s " % (info["code"], example_text))
+            # part_list = [" " + p.upper() + " " if (idx & 1) else p for idx, p in enumerate(info["example"].split("*"))]
+            # example_text = "".join(part_list)
+            # row.label(text="%s %s " % (info["code"], example_text))
             
 
 #------------------------------------------
 # Render objects
 
-def load_phoneme_table(context):
-    props = context.scene.props
-    phoneme_table_path = props.phoneme_table_path
-    with open(bpy.path.abspath(phoneme_table_path)) as f:
-        phoneme_table = json.load(f)
-        return phoneme_table
+#ggg = 1
 
 class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
     """
@@ -175,6 +236,15 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
     
     def execute(self, context):
         props = context.scene.props
+        
+        update_phoneme_group_pose_list(context)
+        # pose_collection = props.phoneme_poses
+        # pose_props = pose_collection.add()
+        # pose_props.group = "foo"
+        # pose_props.pose = "bar"
+        #ggg += 1
+        return {'FINISHED'}
+        
         
         espeak_path = props.espeak_path
         whisper_library_model = props.whisper_library_model
@@ -292,6 +362,7 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
 ### REGISTRATION ###
 
 classes=[
+    ParrotPoseProps,
     ParrotLipsyncProps,
     PLUGIN_PT_ParrotLipsyncPanel,
     PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
@@ -301,12 +372,15 @@ classes=[
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-        bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
+        
+    bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
+    
 
 def unregister():
     for cls in classes:
-        bpy.utils.unregister_class(cls)       
-        bpy.types.Scene.props = None
+        bpy.utils.unregister_class(cls)
+        
+    bpy.types.Scene.props = None
 
 if __name__ == "__main__":
     register()

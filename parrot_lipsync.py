@@ -107,8 +107,13 @@ class ParrotPoseProps(bpy.types.PropertyGroup):
     group: bpy.props.StringProperty(
         name="Group name",
     )
-    pose: bpy.props.StringProperty(
-        name="Pose name",
+    # pose: bpy.props.StringProperty(
+        # name="Pose name",
+    # )
+    pose: bpy.props.PointerProperty(
+        name = "Pose Action",
+        description = "Armature pose for this lipsync group.",
+        type=bpy.types.Action
     )
 
 class ParrotLipsyncProps(bpy.types.PropertyGroup):
@@ -156,6 +161,11 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description = "Armature you wish to apply lipsync to.",
         type=bpy.types.Armature
     )
+    lipsync_action: bpy.props.PointerProperty(
+        name = "Lipsync Action",
+        description = "Action lipsync data will be written to.",
+        type=bpy.types.Action
+    )
 #cameraList:bpy.props.CollectionProperty(type=myPointerCollectionLs)
 
 #------------------------------------------
@@ -177,6 +187,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         main_column = layout.column()
 
         main_column.prop(props, "armature")
+        main_column.prop(props, "lipsync_action")
 
         main_column.prop(props, "espeak_path")
         main_column.prop(props, "whisper_library_model")
@@ -243,15 +254,33 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
         # pose_props.group = "foo"
         # pose_props.pose = "bar"
         #ggg += 1
-        return {'FINISHED'}
         
         
         espeak_path = props.espeak_path
         whisper_library_model = props.whisper_library_model
         autodetect_language = props.autodetect_language
         language_code = props.language_code
+        lipsync_action = props.lipsync_action
+        armature = props.armature
 #        phoneme_table_path = props.phoneme_table_path
 
+        if not armature:
+            self.report({"WARNING"}, "Armature is not set")
+            return {'CANCELLED'}
+        
+        
+        if not lipsync_action:
+#            action = bpy.ops.actions.new("lipsync")
+            action = bpy.data.actions.new("lipsync")
+            
+            # data_path = "scale"
+            # fc = action.fcurves.new(data_path, index=axis)
+            # fc.keyframe_points.add(count=2)
+            # for kfp in fc.keyframe_points:
+                # kfp.co = (uniform(1,100), uniform(0, 1))
+            props.lipsync_action = action
+
+        #return {'FINISHED'}
         
         # with open(bpy.path.abspath(phoneme_table_path)) as f:
             # phoneme_table = json.load(f)
@@ -262,6 +291,10 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
         for info in phoneme_table["phonemes"]:
             phoneme_hash[info["code"]] = info
 
+        group_pose_hash = {}
+        for pose_props in props.phoneme_poses:
+            group_pose_hash[pose_props.group] = pose_props.pose
+            
 #        print(phoneme_hash)
         
         model = whisper.load_model(whisper_library_model)
@@ -311,7 +344,7 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
             for seg in whisper_result["segments"]:
                 for word in seg["words"]:
                     word_list.append(word["text"])
-                    print("word %s %f %f" % (word["text"], word["start"], word["end"]))
+                    #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
                     #word["text"]
                     #word["start"]
                     #word["end"]
@@ -322,16 +355,24 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
             
             phonemes = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)
             for p_word in phonemes:
+                print(p_word)
+                
                 for ele in p_word.split(' '):
                     if not ele in phoneme_hash:
-                        print("missing phoneme: ", ele)
+                        print("Missing phoneme: ", ele)
+                        continue
+                    
+                    group_name = phoneme_hash[ele]["group"]
+                    print("group_name " , group_name)
+                    if not group_name in group_pose_hash:
+                        continue
+                    
+                    pose_action = group_pose_hash[group_name]
+                    
             
-                #print(p_word)
                 
 
             
-            #_, probs = model.detect_language(mel)
-            #print(f"Detected language: {max(probs, key=probs.get)}")
  
 ####
  

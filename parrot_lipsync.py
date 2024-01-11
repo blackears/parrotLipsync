@@ -92,6 +92,11 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
         default="en"
     )
+    phoneme_table_path: bpy.props.StringProperty(
+        name="Phoneme table file",
+        default='//phoneme_table_en.json',
+        subtype='FILE_PATH',
+    )
 
 
  
@@ -99,31 +104,67 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
 # Panel
 
 class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
-    bl_label = "Parrot Lipsync Panel"
-    bl_idname = "PLUGIN_PT_main"
+    bl_label = "Parrot Lipsync"
+    bl_idname = "PLUGIN_PT_parrot_lipsync"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Parrot Lipsync"
+    #bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
-        manage_props = context.scene.manage_props
+        props = context.scene.props
         layout = self.layout
 
-        system_setting_column = layout.column()
+        main_column = layout.column()
 
-        #system_setting_column.prop(manage_props, "espeak_path")
-        system_setting_column.prop(manage_props, "whisper_library_model")
-        system_setting_column.prop(manage_props, "autodetect_language")
+        main_column.prop(props, "espeak_path")
+        main_column.prop(props, "whisper_library_model")
+        main_column.prop(props, "autodetect_language")
         
-        row = system_setting_column.row()
-        row.enabled = not manage_props.autodetect_language
-        row.prop(manage_props, "language_code")
+        row = main_column.row()
+        row.enabled = not props.autodetect_language
+        row.prop(props, "language_code")
 
-        system_setting_column.operator("plugin.parrot_lipsync_generator")
+        main_column.operator("plugin.parrot_lipsync_generator")
 
+
+class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
+    bl_label = "Phoneme Groups"
+    bl_idname = "PLUGIN_PT_parrot_lipsync_phoneme_groups"
+    bl_parent_id = "PLUGIN_PT_parrot_lipsync"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+        props = context.scene.props
+        layout = self.layout
+
+        phoneme_table = load_phoneme_table(context)
+
+        main_column = layout.column()
+        
+        row = main_column.row()
+        row.label(text="first row")
+        
+        for info in phoneme_table["phonemes"]:
+            #print("info ", info)
+            row = main_column.row()
+            
+            part_list = [" " + p.upper() + " " if (idx & 1) else p for idx, p in enumerate(info["example"].split("*"))]
+            example_text = "".join(part_list)
+            row.label(text="%s %s " % (info["code"], example_text))
+            
 
 #------------------------------------------
 # Render objects
+
+def load_phoneme_table(context):
+    props = context.scene.props
+    phoneme_table_path = props.phoneme_table_path
+    with open(bpy.path.abspath(phoneme_table_path)) as f:
+        phoneme_table = json.load(f)
+        return phoneme_table
 
 class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
     """
@@ -133,16 +174,29 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
     bl_idname = "plugin.parrot_lipsync_generator"
     
     def execute(self, context):
-        manage_props = context.scene.manage_props
+        props = context.scene.props
         
-        #espeak_path = manage_props.espeak_path
-        whisper_library_model = manage_props.whisper_library_model
-        autodetect_language = manage_props.autodetect_language
-        language_code = manage_props.language_code
+        espeak_path = props.espeak_path
+        whisper_library_model = props.whisper_library_model
+        autodetect_language = props.autodetect_language
+        language_code = props.language_code
+#        phoneme_table_path = props.phoneme_table_path
+
+        
+        # with open(bpy.path.abspath(phoneme_table_path)) as f:
+            # phoneme_table = json.load(f)
+# #            print(phoneme_table)
+        phoneme_table = load_phoneme_table(context)
+
+        phoneme_hash = {}
+        for info in phoneme_table["phonemes"]:
+            phoneme_hash[info["code"]] = info
+
+#        print(phoneme_hash)
         
         model = whisper.load_model(whisper_library_model)
         
-        #EspeakWrapper.set_library(espeak_path)
+        EspeakWrapper.set_library(espeak_path)
         # initialize the espeak backend for English
         #backend = EspeakBackend('en-us')
 
@@ -188,16 +242,22 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                 for word in seg["words"]:
                     word_list.append(word["text"])
                     print("word %s %f %f" % (word["text"], word["start"], word["end"]))
-                    word["text"]
-                    word["start"]
-                    word["end"]
+                    #word["text"]
+                    #word["start"]
+                    #word["end"]
             
             
             espeak_backend = EspeakBackend("en-us")
             espeak_separator = Separator(phone=' ', word=None)
             
             phonemes = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)
-            print(phonemes)
+            for p_word in phonemes:
+                for ele in p_word.split(' '):
+                    if not ele in phoneme_hash:
+                        print("missing phoneme: ", ele)
+            
+                #print(p_word)
+                
 
             
             #_, probs = model.detect_language(mel)
@@ -234,18 +294,19 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
 classes=[
     ParrotLipsyncProps,
     PLUGIN_PT_ParrotLipsyncPanel,
+    PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
     PLUGIN_OT_ParrotLipsyncGenerator,
 ]
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-        bpy.types.Scene.manage_props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
+        bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
 
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)       
-        bpy.types.Scene.manage_props = None
+        bpy.types.Scene.props = None
 
 if __name__ == "__main__":
     register()

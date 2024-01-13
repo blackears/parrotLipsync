@@ -165,6 +165,10 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description = "Action lipsync data will be written to.",
         type=bpy.types.Action
     )
+    rest_cooldown_time: bpy.props.FloatProperty(
+        name="Rest cooldown time",
+        default=.5,
+    )
 #cameraList:bpy.props.CollectionProperty(type=myPointerCollectionLs)
 
 #------------------------------------------
@@ -271,6 +275,7 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
         language_code = props.language_code
         tgt_action = props.lipsync_action
         armature = props.armature
+        rest_cooldown_time = props.rest_cooldown_time
 #        phoneme_table_path = props.phoneme_table_path
 
         if not armature:
@@ -354,9 +359,11 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
 #            espeak_backend = EspeakBackend(final_language_code)
             
             word_list = []
+            word_list_info = []
             for seg in whisper_result["segments"]:
                 for word in seg["words"]:
                     word_list.append(word["text"])
+                    word_list_info.append(word)
                     #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
                     #word["text"]
                     #word["start"]
@@ -366,14 +373,25 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
             espeak_backend = EspeakBackend("en-us")
             espeak_separator = Separator(phone=' ', word=None)
             
-            phonemes = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)
+            phoneme_word_list = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)
             
-            cur_frame = 0
-            for p_word in phonemes:
-                print(p_word)
+            phoneme_timings = []
+
+            for pw_idx, pw_word in enumerate(phoneme_word_list):
+                print(pw_word)
+                word = word_list_info[pw_idx]
+                print(word)
                 
-                for ele in p_word.split(' '):
-                    cur_frame += 1
+                word_time_start = word["start"]
+                word_time_end = word["end"]
+                word_time_span = word_time_end - word_time_start
+                
+                phonemes = pw_word.split(' ')
+                num_keys = len(phonemes) + 1
+
+                phoneme_timings.append({"group": "rest", "time": word_time_start})
+                
+                for p_idx, ele in enumerate(phonemes):
                     
                     if not ele in phoneme_hash:
                         print("Missing phoneme: ", ele)
@@ -383,47 +401,99 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                     #print("group_name " , group_name)
                     if not group_name in group_pose_hash:
                         continue
-                    
+
                     src_action = group_pose_hash[group_name]
                     if not src_action:
                         continue
-                        
-                    #print("src_action.name " + src_action.name)
                     
-                    
-                    group_map = {}
-                    
-                    for src_group in src_action.groups:
-                        if not src_group.name in tgt_action.groups:
-                            tgt_group = tgt_action.groups.new(src_group.name)
-                        else:
-                            tgt_group = tgt_action.groups[src_group.name]
-                        
-                        group_map[src_group.name] = tgt_group
-                    
-                    for src_curve in src_action.fcurves:
-                        #print("curve.data_path ", curve.data_path, curve.array_index)
-                        
-                        if src_curve.is_empty:
-                            continue
+                    p_time = word_time_start + word_time_span * (float(p_idx + 1) / num_keys)
+                    phoneme_timings.append({"group": group_name, "time": p_time})
+#                    phoneme_timings.append([group_name, p_time * context.scene.render.fps])
+                
+                if pw_idx < len(word_list_info) - 1:
+                    next_word_start_time = word_list_info[pw_idx + 1]["start"]
+                    if next_word_start_time - word_time_end > rest_cooldown_time:
+                
+                        phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
+            
+            if len(phoneme_timings) == 0:
+                #No phonemes - skip to next track
+                continue
 
-                        tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
-                        if not tgt_curve:
-                            tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
-                            tgt_curve.group = group_map[src_curve.group.name]
+            #Add final rest after final word
+            phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
+            
+            # phoneme_timings_with_rests = []
+            
+            # print("phoneme_timings[0] " , phoneme_timings[0])
+            
+            # if phoneme_timings[0]["time"] > rest_cooldown_time:
+                # phoneme_timings_with_rests.append({"group": "rest", "time": phoneme_timings[0]["time"] - rest_cooldown_time})
+                
+            # for p_idx in range(len(phoneme_timings) - 1):
+                # phoneme_timings_with_rests.append(phoneme_timings[p_idx])
+                
+                # delta_time = phoneme_timings[p_idx + 1]["time"] - phoneme_timings[p_idx]["time"]
+                # if delta_time >= rest_cooldown_time:
+                    # phoneme_timings_with_rests.append({"group": "rest", "time": phoneme_timings[p_idx]["time"] + delta_time / 2.0})
+                    
+            # phoneme_timings_with_rests.append({"group": "rest", "time": phoneme_timings[-1]["time"] + rest_cooldown_time})
+
+            # for pt in phoneme_timings:
+                # print(pt)
+
+            #return {'FINISHED'}
+            
+            #####################
+            
+            for idx, p_timing in enumerate(phoneme_timings):
+                print(p_timing)
+                                
+                group_name = p_timing["group"]
+                #print("group_name " , group_name)
+                if not group_name in group_pose_hash:
+                    continue
+                
+                src_action = group_pose_hash[group_name]
+                if not src_action:
+                    continue
+                    
+                #print("src_action.name " + src_action.name)
+                
+                
+                group_map = {}
+                
+                for src_group in src_action.groups:
+                    if not src_group.name in tgt_action.groups:
+                        tgt_group = tgt_action.groups.new(src_group.name)
+                    else:
+                        tgt_group = tgt_action.groups[src_group.name]
+                    
+                    group_map[src_group.name] = tgt_group
+                
+                for src_curve in src_action.fcurves:
+                    #print("curve.data_path ", curve.data_path, curve.array_index)
+                    
+                    if src_curve.is_empty:
+                        continue
+
+                    tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
+                    if not tgt_curve:
+                        tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+                        tgt_curve.group = group_map[src_curve.group.name]
+                    
+                    #start_co = curve.keyframe_points[0]
+                    range = src_action.curve_frame_range
+                    #print("range ", range)
+                    for src_kf in src_curve.keyframe_points:
+                        #co = kf.co
+                        tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + (p_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
                         
-                        #start_co = curve.keyframe_points[0]
-                        range = src_action.curve_frame_range
-                        #print("range ", range)
-                        for src_kf in src_curve.keyframe_points:
-                            #co = kf.co
-                            tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + cur_frame), value = src_kf.co[1])
-                            
-                            tgt_kf.interpolation = src_kf.interpolation
-                            tgt_kf.easing = src_kf.easing
-                            tgt_kf.handle_left = src_kf.handle_left
-                            tgt_kf.handle_right = src_kf.handle_right
-                            tgt_kf.period = src_kf.period
+                        tgt_kf.interpolation = src_kf.interpolation
+                        tgt_kf.easing = src_kf.easing
+                        tgt_kf.handle_left = src_kf.handle_left
+                        tgt_kf.handle_right = src_kf.handle_right
+                        tgt_kf.period = src_kf.period
 ####
  
             #print("Processing ", seq.name)
@@ -466,6 +536,8 @@ def register():
         
     bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
     
+    addon_path =  os.path.dirname(__file__)
+    icons_dir = os.path.join(addon_path, "icons")    
 
 def unregister():
     for cls in classes:

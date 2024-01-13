@@ -89,8 +89,7 @@ def update_phoneme_group_pose_list(context):
         if not group_name in groups_already_listed:
             pose_props = context.scene.props.phoneme_poses.add()
             pose_props.group = group_name
-            pose_props.pose = "foo"
-    pass
+
 
 
 def load_phoneme_table(context):
@@ -204,6 +203,9 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
     bl_label = "Phoneme Groups"
     bl_idname = "PLUGIN_PT_parrot_lipsync_phoneme_groups"
     bl_parent_id = "PLUGIN_PT_parrot_lipsync"
+    #FILE_BROWSER
+    #ASSETS
+    #VIEW_3D
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_options = {"DEFAULT_CLOSED"}
@@ -231,11 +233,12 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
             #print("draw group name-- ", group)
             row.label(text = group)
             #row.prop(pose_props, "group")
-            row.prop(pose_props, "pose")
             #print("**hash: ", group, " " , group_hash)
 #           print(group_hash)
             desc_text = group_hash[group]["description"] if group in group_hash else ""
-            box.label(text = desc_text)
+            row.label(text = desc_text)
+            
+            box.prop(pose_props, "pose")
         
             
 
@@ -266,7 +269,7 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
         whisper_library_model = props.whisper_library_model
         autodetect_language = props.autodetect_language
         language_code = props.language_code
-        lipsync_action = props.lipsync_action
+        tgt_action = props.lipsync_action
         armature = props.armature
 #        phoneme_table_path = props.phoneme_table_path
 
@@ -275,18 +278,22 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
             return {'CANCELLED'}
         
         
-        if not lipsync_action:
+        if not tgt_action:
 #            action = bpy.ops.actions.new("lipsync")
-            action = bpy.data.actions.new("lipsync")
+            tgt_action = bpy.data.actions.new("lipsync")
             
             # data_path = "scale"
             # fc = action.fcurves.new(data_path, index=axis)
             # fc.keyframe_points.add(count=2)
             # for kfp in fc.keyframe_points:
                 # kfp.co = (uniform(1,100), uniform(0, 1))
-            props.lipsync_action = action
+            props.lipsync_action = tgt_action
+            #tgt_action = props.lipsync_action
 
-        #return {'FINISHED'}
+        #curve = lipsync_action.fcurves.new("location")
+        tgt_action.fcurves.clear()
+
+#        return {'FINISHED'}
         
         # with open(bpy.path.abspath(phoneme_table_path)) as f:
             # phoneme_table = json.load(f)
@@ -360,29 +367,57 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
             espeak_separator = Separator(phone=' ', word=None)
             
             phonemes = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)
+            
+            cur_frame = 0
             for p_word in phonemes:
                 print(p_word)
                 
                 for ele in p_word.split(' '):
+                    cur_frame += 1
+                    
                     if not ele in phoneme_hash:
                         print("Missing phoneme: ", ele)
                         continue
                     
                     group_name = phoneme_hash[ele]["group"]
-                    print("group_name " , group_name)
+                    #print("group_name " , group_name)
                     if not group_name in group_pose_hash:
                         continue
                     
-                    pose_action = group_pose_hash[group_name]
-                    if not pose_action:
+                    src_action = group_pose_hash[group_name]
+                    if not src_action:
                         continue
+                        
+                    #print("src_action.name " + src_action.name)
                     
-                    for curve in pose_action.fcurves:
-                        print(curve.data_path, curve.array_index)
-                
+                    
+                    group_map = {}
+                    
+                    for src_group in src_action.groups:
+                        tgt_group = tgt_action.groups.new(src_group.name)
+                        
+                        group_map[src_group.name] = tgt_group
+                    
+                    for src_curve in src_action.fcurves:
+                        #print("curve.data_path ", curve.data_path, curve.array_index)
 
-            
- 
+                        tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
+                        if not tgt_curve:
+                            tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+                            tgt_curve.group = group_map[src_curve.group.name]
+                        
+                        #start_co = curve.keyframe_points[0]
+                        range = src_action.curve_frame_range
+                        #print("range ", range)
+                        for src_kf in src_curve.keyframe_points:
+                            #co = kf.co
+                            tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + cur_frame), value = src_kf.co[1])
+                            
+                            tgt_kf.interpolation = src_kf.interpolation
+                            tgt_kf.easing = src_kf.easing
+                            tgt_kf.handle_left = src_kf.handle_left
+                            tgt_kf.handle_right = src_kf.handle_right
+                            tgt_kf.period = src_kf.period
 ####
  
             #print("Processing ", seq.name)

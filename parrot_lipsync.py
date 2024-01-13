@@ -394,12 +394,18 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                     group_map = {}
                     
                     for src_group in src_action.groups:
-                        tgt_group = tgt_action.groups.new(src_group.name)
+                        if not src_group.name in tgt_action.groups:
+                            tgt_group = tgt_action.groups.new(src_group.name)
+                        else:
+                            tgt_group = tgt_action.groups[src_group.name]
                         
                         group_map[src_group.name] = tgt_group
                     
                     for src_curve in src_action.fcurves:
                         #print("curve.data_path ", curve.data_path, curve.array_index)
+                        
+                        if src_curve.is_empty:
+                            continue
 
                         tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
                         if not tgt_curve:

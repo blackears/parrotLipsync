@@ -297,6 +297,9 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
 
         #curve = lipsync_action.fcurves.new("location")
         tgt_action.fcurves.clear()
+        #tgt_action.pose_markers.clear()
+        for marker in tgt_action.pose_markers.values():
+            tgt_action.pose_markers.remove(marker)
 
 #        return {'FINISHED'}
         
@@ -447,7 +450,7 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
             #####################
             
             for idx, p_timing in enumerate(phoneme_timings):
-                print(p_timing)
+                #print(p_timing)
                                 
                 group_name = p_timing["group"]
                 #print("group_name " , group_name)
@@ -458,6 +461,8 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                 if not src_action:
                     continue
                     
+                marker = tgt_action.pose_markers.new(group_name)
+                marker.frame = int(p_timing["time"] * context.scene.render.fps)
                 #print("src_action.name " + src_action.name)
                 
                 
@@ -487,7 +492,7 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                     #print("range ", range)
                     for src_kf in src_curve.keyframe_points:
                         #co = kf.co
-                        tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + (p_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
+                        tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + int(p_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
                         
                         tgt_kf.interpolation = src_kf.interpolation
                         tgt_kf.easing = src_kf.easing

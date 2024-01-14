@@ -38,12 +38,12 @@ import sys
 import os
 import bpy
 
-import whisper_timestamped as whisper
+# import whisper_timestamped as whisper
 
-from phonemizer.backend import EspeakBackend
-from phonemizer.punctuation import Punctuation
-from phonemizer.separator import Separator
-from phonemizer.backend.espeak.wrapper import EspeakWrapper
+# from phonemizer.backend import EspeakBackend
+# from phonemizer.punctuation import Punctuation
+# from phonemizer.separator import Separator
+# from phonemizer.backend.espeak.wrapper import EspeakWrapper
 
 import json
 
@@ -61,10 +61,11 @@ def install_whisper():
     
 def update_phoneme_table_path(self, context):
     print("--update_phoneme_table_path")
+    update_phoneme_group_pose_list(context)
     pass
  
 def update_phoneme_group_pose_list(context):
-    print("--update_phoneme_table_path")
+    #print("--update_phoneme_group_pose_list")
     phoneme_table = load_phoneme_table(context)
     
     group_list = [info["group"] for info in phoneme_table["phonemes"]]
@@ -189,7 +190,6 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Parrot Lipsync"
-    #bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
         props = context.scene.props
@@ -212,7 +212,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         main_column.prop(props, "override_espeak_language_code")
         row = main_column.row()
         row.enabled = props.override_espeak_language_code
-        main_column.prop(props, "espeak_language_code")
+        row.prop(props, "espeak_language_code")
 
         main_column.operator("plugin.parrot_lipsync_generator")
 
@@ -221,9 +221,6 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
     bl_label = "Phoneme Groups"
     bl_idname = "PLUGIN_PT_parrot_lipsync_phoneme_groups"
     bl_parent_id = "PLUGIN_PT_parrot_lipsync"
-    #FILE_BROWSER
-    #ASSETS
-    #VIEW_3D
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_options = {"DEFAULT_CLOSED"}
@@ -237,21 +234,15 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
         group_hash = {}
         for group_info in phoneme_table["groups"]:
             name = group_info["name"]
-            #print("draw group name ", name, " ", group_info)
             group_hash[name] = group_info
-#            group_hash[name] = "eee"
         
-#        print("**hash: " , group_hash)
         main_column = layout.column()
        
         for pose_props in props.phoneme_poses:
             box = main_column.box()
             row = box.row()
             group = str(pose_props.group)
-            #print("draw group name-- ", group)
             row.label(text = group)
-            #row.prop(pose_props, "group")
-            #print("**hash: ", group, " " , group_hash)
 #           print(group_hash)
             desc_text = group_hash[group]["description"] if group in group_hash else ""
             row.label(text = desc_text)
@@ -288,6 +279,15 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
     bl_idname = "plugin.parrot_lipsync_generator"
     
     def execute(self, context):
+        #Putting imports here to avoid these libraries slowing down Blender loading addons
+        import whisper_timestamped as whisper
+
+        from phonemizer.backend import EspeakBackend
+        from phonemizer.punctuation import Punctuation
+        from phonemizer.separator import Separator
+        from phonemizer.backend.espeak.wrapper import EspeakWrapper
+
+    
         props = context.scene.props
         
         update_phoneme_group_pose_list(context)

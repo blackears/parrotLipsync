@@ -12,8 +12,9 @@ https://github.com/espeak-ng/espeak-ng/blob/master/docs/guide.md
 The addon should automatically install Whisper if it is not already installed - however, if you wish to install Whisper manually, open a terminal window and go into your Blender installation's python directory (on Windows it should be something like `C:\Program Files\Blender Foundation\Blender 4.0\4.0\python\bin`).  Then issue the following commands:
 
 ```
-python.exe -m pip install --upgrade whisper_timestamped
-python.exe -m pip install --upgrade phonemizer
+./python.exe -m pip install --upgrade whisper_timestamped
+./python.exe -m pip install --upgrade phonemizer
+./python.exe -m pip install --upgrade gruut
 ```
 
 You can install the addon by opening Blender's Edit/Preferences menu, opening the Addons section, clicking the Install button and then browsing to the parrot_lipsync.py file.  Once installed, make sure that you check the box to enable it.  It should now appear in the viewport right hand tab menu.

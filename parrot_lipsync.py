@@ -28,7 +28,6 @@ bl_info = {
     "description": "Generate lipsync tracks from audio files using Whisper AI.",
     #"warning": "",
     "doc_url": "https://github.com/blackears/parrotLipsync",
-#    "category": "Import/Export",
     "category": "View 3D"
 }
 
@@ -144,6 +143,16 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
         default="en"
     )
+    override_espeak_language_code: bpy.props.BoolProperty(
+        name="Specify Espeak Language Code",
+        description="If checked, Espeak will use the given code for phonemization.",
+        default=False,
+    )
+    espeak_language_code: bpy.props.StringProperty(
+        name="Language code",
+        description="Use this to override the language used by the Espeak phonemizer.  'en-us' will work for all languages, although using a more language specific code will give better results for non-english languages.",
+        default="en-us"
+    )
     phoneme_table_path: bpy.props.StringProperty(
         name="Phoneme table file",
         default='//phoneme_table_en.json',
@@ -194,11 +203,16 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 
         main_column.prop(props, "espeak_path")
         main_column.prop(props, "whisper_library_model")
-        main_column.prop(props, "autodetect_language")
-        
+
+        main_column.prop(props, "autodetect_language")        
         row = main_column.row()
         row.enabled = not props.autodetect_language
         row.prop(props, "language_code")
+
+        main_column.prop(props, "override_espeak_language_code")
+        row = main_column.row()
+        row.enabled = props.override_espeak_language_code
+        main_column.prop(props, "espeak_language_code")
 
         main_column.operator("plugin.parrot_lipsync_generator")
 
@@ -251,22 +265,32 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
 
 #ggg = 1
 
+valid_espeak_codes = ['af', 'am', 'an', 'as', 'az', 'ba', 'be', 'bg', 'bn', 'bpy', 'bs', 'ca', 'chr-US-Qaaa-x-west', 'cmn', 'cmn-latn-pinyin', 'cv', 'cy', 'da', 'de', 'en-us', 'en-029', 'en-gb', 'en-gb-scotland', 'en-gb-x-gbclan', 'en-gb-x-gbcwmd', 'en-gb-x-rp', 'en-us-nyc', 'eo', 'es', 'es-419', 'et', 'eu', 'fa', 'fa-latn', 'fi', 'fr-fr', 'fr-be', 'fr-ch', 'ga', 'gd', 'gn', 'grc', 'gu', 'hak', 'haw', 'he', 'hr', 'ht', 'hu', 'hy', 'hyw', 'ia', 'id', 'io', 'is', 'it', 'jbo', 'ka', 'kk', 'kl', 'kn', 'ko', 'kok', 'ku', 'ky', 'la', 'lb', 'lfn', 'lt', 'ltg', 'lv', 'mi', 'mk', 'ml', 'mr', 'mt', 'my', 'nb', 'nci', 'ne', 'nl', 'nog', 'om', 'or', 'pa', 'pap', 'piqd', 'pl', 'pt', 'pt-br', 'py', 'qdb', 'qu', 'quc', 'qya', 'ro', 'ru', 'ru-lv', 'sd', 'shn', 'si', 'sjn', 'sk', 'sl', 'smj', 'sq', 'sr', 'sv', 'sw', 'ta', 'te', 'th', 'tk', 'tn', 'tr', 'tt', 'ug', 'uk', 'ur', 'uz', 'vi', 'vi-vn-x-central', 'vi-vn-x-south', 'yue']
+
+def get_espeak_lang_code(context, lang_code):
+    props = context.scene.props
+    
+    if props.override_espeak_language_code:
+        return props.espeak_language_code
+
+    codes = [code for code in valid_espeak_codes if code.startswith(lang_code)]
+    if len(codes) > 0:
+        return codes[0]
+
+    return "en-us"
+
+
 class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
     """
     Parrot Lipsync Generator
     """
-    bl_label = "Parrot Lipsync Generator"
+    bl_label = "Generate Lipsync"
     bl_idname = "plugin.parrot_lipsync_generator"
     
     def execute(self, context):
         props = context.scene.props
         
         update_phoneme_group_pose_list(context)
-        # pose_collection = props.phoneme_poses
-        # pose_props = pose_collection.add()
-        # pose_props.group = "foo"
-        # pose_props.pose = "bar"
-        #ggg += 1
         
         
         espeak_path = props.espeak_path
@@ -276,7 +300,6 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
         tgt_action = props.lipsync_action
         armature = props.armature
         rest_cooldown_time = props.rest_cooldown_time
-#        phoneme_table_path = props.phoneme_table_path
 
         if not armature:
             self.report({"WARNING"}, "Armature is not set")
@@ -284,28 +307,14 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
         
         
         if not tgt_action:
-#            action = bpy.ops.actions.new("lipsync")
             tgt_action = bpy.data.actions.new("lipsync")
             
-            # data_path = "scale"
-            # fc = action.fcurves.new(data_path, index=axis)
-            # fc.keyframe_points.add(count=2)
-            # for kfp in fc.keyframe_points:
-                # kfp.co = (uniform(1,100), uniform(0, 1))
             props.lipsync_action = tgt_action
-            #tgt_action = props.lipsync_action
 
-        #curve = lipsync_action.fcurves.new("location")
         tgt_action.fcurves.clear()
-        #tgt_action.pose_markers.clear()
         for marker in tgt_action.pose_markers.values():
             tgt_action.pose_markers.remove(marker)
 
-#        return {'FINISHED'}
-        
-        # with open(bpy.path.abspath(phoneme_table_path)) as f:
-            # phoneme_table = json.load(f)
-# #            print(phoneme_table)
         phoneme_table = load_phoneme_table(context)
 
         phoneme_hash = {}
@@ -373,7 +382,10 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                     #word["end"]
             
             
-            espeak_backend = EspeakBackend("en-us")
+            espeak_lang_code = get_espeak_lang_code(context, final_language_code)
+            print("Using espeak language code ", espeak_lang_code)
+            espeak_backend = EspeakBackend(espeak_lang_code)
+#            espeak_backend = EspeakBackend("en-us")
             espeak_separator = Separator(phone=' ', word=None)
             
             phoneme_word_list = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)

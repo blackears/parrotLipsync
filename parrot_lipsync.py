@@ -48,16 +48,16 @@ import bpy
 import json
 
 
-def install_whisper():
-    python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-    target = os.path.join(sys.prefix, 'lib', 'site-packages')
+# def install_whisper():
+    # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+    # target = os.path.join(sys.prefix, 'lib', 'site-packages')
      
-    subprocess.call([python_exe, '-m', 'ensurepip'])
-    subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    # subprocess.call([python_exe, '-m', 'ensurepip'])
+    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-    #example package to install (SciPy):
-    #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-    subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
+    # #example package to install (SciPy):
+    # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
+    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
     
 def update_phoneme_table_path(self, context):
     print("--update_phoneme_table_path")
@@ -95,7 +95,16 @@ def update_phoneme_group_pose_list(context):
 def load_phoneme_table(context):
     props = context.scene.props
     phoneme_table_path = props.phoneme_table_path
-    with open(bpy.path.abspath(phoneme_table_path)) as f:
+    abs_path = bpy.path.abspath(phoneme_table_path)
+    
+    #print("Checking path ", abs_path)
+    if not os.path.isfile(abs_path):
+        addon_path = os.path.dirname(__file__) # for addon
+        addon_path = os.path.dirname(bpy.data.filepath)  # for standalone file
+        abs_path = os.path.join(addon_path, "phoneme_table_en.json")    
+        print("Default table: ", abs_path)
+
+    with open(abs_path) as f:
         phoneme_table = json.load(f)
         return phoneme_table
 
@@ -203,6 +212,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 
         main_column.prop(props, "espeak_path")
         main_column.prop(props, "whisper_library_model")
+        main_column.prop(props, "phoneme_table_path")
 
         main_column.prop(props, "autodetect_language")        
         row = main_column.row()
@@ -215,6 +225,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         row.prop(props, "espeak_language_code")
 
         main_column.operator("plugin.parrot_lipsync_generator")
+        #main_column.operator("plugin.parrot_install_whisper")
 
 
 class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
@@ -535,6 +546,25 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class PLUGIN_OT_ParrotInstallWhisper(bpy.types.Operator):
+    """
+    Install Whisper
+    """
+    bl_label = "Install/Update Whisper"
+    bl_idname = "plugin.parrot_install_whisper"
+    
+    def execute(self, context):
+        python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+        target = os.path.join(sys.prefix, 'lib', 'site-packages')
+         
+        subprocess.call([python_exe, '-m', 'ensurepip'])
+        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
+
+        #example package to install (SciPy):
+        #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
+        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
+
+        return {'FINISHED'}
 
 
 ### REGISTRATION ###
@@ -545,6 +575,7 @@ classes=[
     PLUGIN_PT_ParrotLipsyncPanel,
     PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
     PLUGIN_OT_ParrotLipsyncGenerator,
+    PLUGIN_OT_ParrotInstallWhisper,
 ]
 
 def register():
@@ -553,8 +584,8 @@ def register():
         
     bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
     
-    addon_path =  os.path.dirname(__file__)
-    icons_dir = os.path.join(addon_path, "icons")    
+    # addon_path =  os.path.dirname(__file__)
+    # icons_dir = os.path.join(addon_path, "icons")    
 
 def unregister():
     for cls in classes:

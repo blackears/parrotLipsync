@@ -39,6 +39,7 @@ from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPanel
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel
 from .parrot_lipsync import PLUGIN_OT_ParrotLipsyncGenerator
 from .parrot_lipsync import PLUGIN_OT_ParrotInstallWhisper
+from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
 #from .parrot_lipsync import update_phoneme_group_pose_list
 
 
@@ -51,6 +52,7 @@ classes=[
     PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
     PLUGIN_OT_ParrotLipsyncGenerator,
     PLUGIN_OT_ParrotInstallWhisper,
+    PLUGIN_OT_ParrotReloadPhonemeTable,
 ]
 
 def register():

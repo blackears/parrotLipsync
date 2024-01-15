@@ -1,4 +1,7 @@
 {
+    "info": {
+        "url": "https://ecampusontario.pressbooks.pub/essentialsoflinguistics/chapter/2-5-ipa-symbols-and-speech-sounds/"
+    },
     "groups": [
         {
             "name":"A",
@@ -52,316 +55,296 @@
 
     "phonemes": [
         {
-            "code": "ð",
-            "text": "th",
-            "example": "*th*e",
-            "group": "TH"
-        },
-        {
-            "code": "ə",
-            "text": "e",
-            "example": "th*e*",
-            "group": "A"
-        },
-        {
-            "code": "ɛ",
-            "text": "e",
-            "example": "*e*nvelope",
-            "group": "A"
-        },
-        {
-            "code": "k",
-            "text": "k",
-            "example": "*k*indle",
-            "group": "C"
-        },
-        {
-            "code": "ɪ",
-            "text": "i",
-            "example": "k*i*ndle",
-            "group": "A"
-        },
-        {
-            "code": "n",
-            "text": "n",
-            "example": "ki*n*dle",
-            "group": "N"
-        },
-        {
-            "code": "d",
-            "text": "d",
-            "example": "kin*d*le",
-            "group": "C"
-        },
-        {
-            "code": "əl",
-            "text": "el",
-            "example": "kind*le*",
-            "group": "L"
-        },
-        {
-            "code": "s",
-            "text": "s",
-            "example": "*s*pring*",
-            "group": "C"
-        },
-        {
             "code": "p",
-            "text": "p",
-            "example": "s*p*ring",
-            "group": "M"
-        },
-        {
-            "code": "ɹ",
-            "text": "r",
-            "example": "sp*r*ing",
-            "group": "C"
-        },
-        {
-            "code": "ŋ",
-            "text": "ng",
-            "example": "spri*ng*",
-            "group": "N"
-        },
-        {
-            "code": "f",
-            "text": "f",
-            "example": "*f*rom",
-            "group": "F"
-        },
-        {
-            "code": "ʌ",
-            "text": "o",
-            "example": "fr*o*m",
-            "group": "O"
-        },
-        {
-            "code": "m",
-            "text": "m",
-            "example": "fro*m*",
+            "class": "Stops",
+            "example": "*p*each, a*pp*le, ca*p*",
             "group": "M"
         },
         {
             "code": "b",
-            "text": "b",
-            "example": "*b*y",
+            "class": "Stops",
+            "example": "*b*ill, a*b*ove, ri*b*",
             "group": "M"
         },
         {
-            "code": "aɪ",
-            "text": "ai",
-            "example": "b*y*",
-            "group": "A"
-        },
-        {
-            "code": "æ",
-            "text": "a",
-            "example": "*a*s",
-            "group": "A"
-        },
-        {
-            "code": "z",
-            "text": "z",
-            "example": "a*s*",
+            "code": "t",
+            "class": "Stops",
+            "example": "*t*all, in*t*ernal, ligh*t*",
             "group": "C"
         },
         {
-            "code": "t",
-            "text": "t",
-            "example": "i*t*",
+            "code": "d",
+            "class": "Stops",
+            "example": "*d*ill, a*d*ore, ki*d*",
             "group": "C"
         },
         {
             "code": "k",
-            "text": "k",
-            "example": "*c*ome",
+            "class": "Stops",
+            "example": "*c*ave, ti*ck*et, luc*k*",
             "group": "C"
-        },
-        {
-            "code": "ɜː",
-            "text": "ur",
-            "example": "b*ur*st",
-            "group": "U"
-        },
-        {
-            "code": "ɑː",
-            "text": "en",
-            "example": "b*on*fire",
-            "group": "O"
-        },
-        {
-            "code": "aɪɚ",
-            "text": "ire",
-            "example": "f*ire*",
-            "group": "A"
         },
         {
             "code": "ɡ",
-            "text": "g",
-            "example": "*g*reen",
+            "class": "Stops",
+            "example": "*g*ive, ba*gg*age, di*g*",
             "group": "C"
         },
+        
         {
-            "code": "iː",
-            "text": "ee",
-            "example": "gr*ee*n",
-            "group": "EE"
-        },
-        {
-            "code": "w",
-            "text": "w",
-            "example": "*w*ild",
-            "group": "W"
-        },
-        {
-            "code": "p",
-            "text": "p",
-            "example": "*p*uff",
-            "group": "M"
-        },
-        {
-            "code": "v",
-            "text": "v",
-            "example": "o*f*",
+            "code": "f",
+            "class": "Fricatives",
+            "example": "*ph*one, ra*ff*le, lea*f*",
             "group": "F"
         },
         {
-            "code": "ɚ",
-            "text": "e",
-            "example": "em*e*rald",
-            "group": "A"
+            "code": "v",
+            "class": "Fricatives",
+            "example": "*v*ideo, li*v*ely, lo*v*e",
+            "group": "F"
         },
         {
-            "code": "ʊ",
-            "text": "u",
-            "example": "b*u*sh",
-            "group": "U"
+            "code": "θ",
+            "class": "Fricatives",
+            "example": "*th*in, au*th*or, ba*th*",
+            "group": "TH"
         },
         {
-            "code": "ʃ",
-            "text": "sh",
-            "example": "bu*sh*",
-            "group": "SH"
+            "code": "ð",
+            "class": "Fricatives",
+            "example": "*th*ere, lea*th*er, brea*th*e",
+            "group": "TH"
         },
         {
-            "code": "ᵻ",
-            "text": "e",
-            "example": "bush*e*s",
-            "group": "A"
-        },
-        {
-            "code": "ɔː",
-            "text": "aw",
-            "example": "t*aw*n",
-            "group": "A"
-        },
-        {
-            "code": "ɔ",
-            "text": "aw",
-            "example": "bl*o*ssom",
-            "group": "O"
-        },
-        {
-            "code": "oʊ",
-            "text": "o",
-            "example": "sm*o*ke",
-            "group": "O"
-        },
-        {
-            "code": "l",
-            "text": "l",
-            "example": "*l*ike",
-            "group": "L"
-        },
-        {
-            "code": "ɔː",
-            "text": "a",
-            "example": "w*a*ter",
-            "group": "A"
-        },
-        {
-            "code": "ɾ",
-            "text": "t",
-            "example": "wa*t*er",
+            "code": "s",
+            "class": "Fricatives",
+            "example": "*c*elery, pa*ss*ing, bu*s*",
             "group": "C"
         },
         {
-            "code": "i",
-            "text": "i",
-            "example": "water*y*",
-            "group": "EE"
+            "code": "z",
+            "class": "Fricatives",
+            "example": "*z*ebra, depo*s*it, shoe*s*",
+            "group": "C"
         },
         {
-            "code": "ɐ",
-            "text": "a",
-            "example": "*a*mong",
-            "group": "A"
+            "code": "ʃ",
+            "class": "Fricatives",
+            "example": "*sh*ell, o*c*ean, ru*sh*",
+            "group": "SH"
+        },
+        {
+            "code": "ʒ",
+            "class": "Fricatives",
+            "example": "*g*enre, mea*s*ure, rou*ge*",
+            "group": "SH"
+        },
+        {
+            "code": "h",
+            "class": "Fricatives",
+            "example": "*h*ill, a*h*ead",
+            "group": "W"
+        },
+        
+        {
+            "code": "tʃ",
+            "class": "Affricates",
+            "example": "*ch*ip, a*ch*ieve, dit*ch*",
+            "group": "SH"
+        },
+        {
+            "code": "dʒ",
+            "class": "Affricates",
+            "example": "*j*ump, a*dj*oin, bri*dge*",
+            "group": "SH"
+        },
+        
+        {
+            "code": "m",
+            "class": "Nasals",
+            "example": "*m*ill, ha*mm*er, broo*m*",
+            "group": "M"
+        },
+        {
+            "code": "n",
+            "class": "Nasals",
+            "example": "*n*ickel, su*nn*y, spoo*n*",
+            "group": "N"
+        },
+        {
+            "code": "ŋ",
+            "class": "Nasals",
+            "example": "si*ng*er, wro*ng*",
+            "group": "N"
+        },
+        
+        {
+            "code": "l",
+            "class": "Approximants",
+            "example": "*l*amb, si*ll*y, fa*ll*",
+            "group": "L"
+        },
+        {
+            "code": "ɹ",
+            "class": "Approximants",
+            "example": "*r*obot, fu*rr*y, sta*r*",
+            "group": "C"
         },
         {
             "code": "j",
-            "text": "u",
-            "example": "f*u*mes",
-            "group": ""
+            "class": "Approximants",
+            "example": "*y*ellow, ro*y*al",
+            "group": "U"
         },
         {
-            "code": "ɛɹ",
-            "text": "er",
-            "example": "w*here*",
+            "code": "w",
+            "class": "Approximants",
+            "example": "*w*inter, flo*w*er",
+            "group": "W"
+        },
+        
+        {
+            "code": "ɾ",
+            "class": "Flap",
+            "example": "bu*tt*er, pe*d*al (only between vowels when the second syllable is unstressed)",
+            "group": "rest"
+        },
+        
+        {
+            "code": "i",
+            "class": "Front Vowels",
+            "example": "s*ee*, n*ea*t, p*ie*ce",
+            "group": "A"
+        },
+        {
+            "code": "ɪ",
+            "class": "Front Vowels",
+            "example": "p*i*n, b*i*t, l*i*ck",
+            "group": "A"
+        },
+        {
+            "code": "e",
+            "class": "Front Vowels",
+            "example": "s*ay*, pl*a*ce, r*ai*n",
+            "group": "A"
+        },
+        {
+            "code": "ɛ",
+            "class": "Front Vowels",
+            "example": "t*e*n, s*ai*d, br*ea*d",
+            "group": "A"
+        },
+        {
+            "code": "æ",
+            "class": "Front Vowels",
+            "example": "m*a*d, c*a*t, f*a*n",
+            "group": "A"
+        },
+        {
+            "code": "a",
+            "class": "Front Vowels",
+            "example": "f*a*r, st*a*rt",
+            "group": "A"
+        },
+    
+        {
+            "code": "u",
+            "class": "Back Vowels",
+            "example": "p*oo*l, bl*ue*",
+            "group": "O"
+        },
+        {
+            "code": "ʊ",
+            "class": "Back Vowels",
+            "example": "l*oo*k, g*oo*d, b*u*sh",
+            "group": "O"
+        },
+        {
+            "code": "o",
+            "class": "Back Vowels",
+            "example": "thr*ow*, h*o*le, t*oe*",
+            "group": "O"
+        },
+        {
+            "code": "ʌ",
+            "class": "Back Vowels",
+            "example": "b*u*s, m*u*d, l*u*nch",
+            "group": "U"
+        },
+        {
+            "code": "ɔ",
+            "class": "Back Vowels",
+            "example": "st*o*re, m*o*re, c*o*rn",
+            "group": "O"
+        },
+        {
+            "code": "ɑ",
+            "class": "Back Vowels",
+            "example": "d*o*g, b*a*ll, f*a*ther",
+            "group": "O"
+        },
+    
+        {
+            "code": "ə",
+            "class": "Central Vowels",
+            "example": "b*e*lieve, cinn*a*mon, s*u*rround (in an unstressed syllable)",
+            "group": "EE"
+        },
+        {
+            "code": "ɨ",
+            "class": "Central Vowels",
+            "example": "ros*e*s, want*e*d (in an unstressed syllable that is a suffix)",
+            "group": "A"
+        },
+        {
+            "code": "ɚ",
+            "class": "Central Vowels",
+            "example": "weath*er*, edit*or* (in an unstressed syllable with an r-quality)",
+            "group": "A"
+        },
+        {
+            "code": "ɝ",
+            "class": "Central Vowels",
+            "example": "b*ir*d, f*ur* (in a stressed syllable with an r-quality)",
+            "group": "A"
+        },
+    
+        {
+            "code": "aɪ",
+            "class": "Diphthongs",
+            "example": "fl*y*, l*ie*, sm*i*le",
             "group": "A"
         },
         {
             "code": "eɪ",
-            "text": "a",
-            "example": "fl*a*mes",
+            "class": "Diphthongs",
+            "example": "dom*ai*n",
             "group": "A"
-        },
-        {
-            "code": "oː",
-            "text": "o",
-            "example": "m*o*re",
-            "group": "O"
-        },
-        {
-            "code": "ɑːɹ",
-            "text": "ar",
-            "example": "sp*ar*k",
-            "group": "A"
-        },
-        {
-            "code": "uː",
-            "text": "u",
-            "example": "f*u*mes",
-            "group": "U"
-        },
-        {
-            "code": "ɔɪ",
-            "text": "oi",
-            "example": "s*oi*l",
-            "group": "O"
-        },
-        {
-            "code": "θ",
-            "text": "th",
-            "example": "ear*th*",
-            "group": "TH"
         },
         {
             "code": "aʊ",
-            "text": "au",
-            "example": "ab*ou*t",
-            "group": "U"
-        },
-        {
-            "code": "tʃ",
-            "text": "t",
-            "example": "combus*t*ion",
-            "group": "C"
-        },
-        {
-            "code": "oːɹ",
-            "text": "or",
-            "example": "rec*or*ding",
+            "class": "Diphthongs",
+            "example": "n*ow*, fr*ow*n, l*ou*d",
             "group": "O"
+        },
+        {
+            "code": "oʊ",
+            "class": "Diphthongs",
+            "example": "l*oa*d, bl*ow*ing",
+            "group": "O"
+        },
+        {
+            "code": "ɔɪ",
+            "class": "Diphthongs",
+            "example": "b*oy*, sp*oi*l, n*oi*se",
+            "group": "O"
+        },
+        {
+            "code": "ju",
+            "class": "Diphthongs",
+            "example": "c*ue*, f*ew*",
+            "group": "E"
         }
+    
     ]
 }

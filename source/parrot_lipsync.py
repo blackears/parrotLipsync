@@ -228,6 +228,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         row.prop(props, "espeak_language_code")
 
         main_column.operator("plugin.parrot_lipsync_generator")
+        main_column.operator("plugin.parrot_reload_phoneme_table")
         #main_column.operator("plugin.parrot_install_whisper")
 
 
@@ -341,6 +342,7 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
 
         phoneme_hash = {}
         for info in phoneme_table["phonemes"]:
+            print("Adding phoneme ", info)
             phoneme_hash[info["code"]] = info
 
         group_pose_hash = {}
@@ -433,6 +435,8 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
                 phoneme_timings.append({"group": "rest", "time": word_time_start})
                 
                 for p_idx, ele in enumerate(phonemes):
+                    ele = ele.replace("ˈ", "")
+                    ele = ele.replace("ˌ", "")
                     
                     if not ele in phoneme_hash:
                         print("Missing phoneme: \"%s\"" % ele)
@@ -558,6 +562,19 @@ class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
             
             
         
+        return {'FINISHED'}
+
+
+class PLUGIN_OT_ParrotReloadPhonemeTable(bpy.types.Operator):
+    """
+    Install Whisper
+    """
+    bl_label = "Reload Phoneme Table"
+    bl_idname = "plugin.parrot_reload_phoneme_table"
+    
+    def execute(self, context):
+        update_phoneme_group_pose_list(context)
+
         return {'FINISHED'}
 
 

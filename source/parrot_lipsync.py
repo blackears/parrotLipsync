@@ -404,6 +404,11 @@ def render_lipsync_to_action(context, tgt_action, seq):
         
     phoneme_timings = []
 
+    seq_time_start = seq.frame_offset_start / context.scene.render.fps
+    seq_time_end = (seq.frame_offset_start + seq.frame_final_duration) / context.scene.render.fps
+
+    #print("seq_time_start ", seq_time_start, " seq_time_end ", seq_time_end)
+
     for pw_idx, pw_word in enumerate(phoneme_word_list):
         word = word_list_info[pw_idx]
         print(word)
@@ -412,6 +417,10 @@ def render_lipsync_to_action(context, tgt_action, seq):
         word_time_start = word["start"]
         word_time_end = word["end"]
         word_time_span = word_time_end - word_time_start
+
+        if word_time_end < seq_time_start or word_time_start > seq_time_end:
+            #print("skip")
+            continue
         
         phonemes = pw_word
         #phonemes = pw_word.split(' ')
@@ -437,6 +446,8 @@ def render_lipsync_to_action(context, tgt_action, seq):
                 continue
             
             p_time = word_time_start + word_time_span * (float(p_idx + 1) / num_keys)
+            #print("p_time ", p_time, " time_start ", time_start, " time_end ", time_end)
+                
             phoneme_timings.append({"group": group_name, "time": p_time})
 #                    phoneme_timings.append([group_name, p_time * context.scene.render.fps])
         

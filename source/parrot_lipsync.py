@@ -48,16 +48,16 @@ import bpy
 import json
 
 
-def install_whisper():
-    python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-    target = os.path.join(sys.prefix, 'lib', 'site-packages')
+# def install_whisper():
+    # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+    # target = os.path.join(sys.prefix, 'lib', 'site-packages')
      
-    subprocess.call([python_exe, '-m', 'ensurepip'])
-    subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    # subprocess.call([python_exe, '-m', 'ensurepip'])
+    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-    #example package to install (SciPy):
-    #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-    subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
+    # #example package to install (SciPy):
+    # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
+    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
     
 def update_phoneme_table_path(self, context):
     print("--update_phoneme_table_path")
@@ -180,7 +180,7 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
     armature: bpy.props.PointerProperty(
         name = "Armature",
         description = "Armature you wish to apply lipsync to.",
-        type=bpy.types.Armature
+        type=bpy.types.Object
     )
     lipsync_action: bpy.props.PointerProperty(
         name = "Lipsync Action",
@@ -517,16 +517,8 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
     bl_idname = "plugin.parrot_render_lipsync_to_rig_nla"
     
     def execute(self, context):
-        #Putting imports here to avoid these libraries slowing down Blender loading addons
 
         props = context.scene.props
-        
-        # tgt_action = bpy.data.actions.new("lipsync_boo")
-        # seq = context.scene.sequence_editor.active_strip
-        # render_lipsync_to_action(context, tgt_action, seq)
-        
-        # return {'FINISHED'}        
-        ###################
         
         armature = props.armature
         rig_action_suffix = props.rig_action_suffix
@@ -537,7 +529,9 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
 
         if not armature.animation_data:
             armature.animation_data_create()
-            
+        
+        armature.animation_data.use_nla = True
+        
         for seq in context.scene.sequence_editor.sequences_all:
             if seq.type != 'SOUND' or not seq.select:
                 continue
@@ -551,9 +545,13 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
             #print("render to seq ", seq.name)
             #print("render to action ", tgt_action.name)
             render_lipsync_to_action(context, tgt_action, seq)
+            
+            # if len(armature.animation_data.nla_tracks) == 0:
+                # #First track is not used
+                # track = armature.animation_data.nla_tracks.new()
 
             track = armature.animation_data.nla_tracks.new()
-            track.strips.new(tgt_action.name, int(seq.frame_start), tgt_action)
+            track.strips.new(tgt_action.name, int(seq.frame_start + tgt_action.frame_range[0]), tgt_action)
         
         armature.animation_data.action = None
         

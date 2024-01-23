@@ -408,6 +408,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
     seq_time_end = (seq.frame_offset_start + seq.frame_final_duration) / context.scene.render.fps
 
     #print("seq_time_start ", seq_time_start, " seq_time_end ", seq_time_end)
+    final_word = None
 
     for pw_idx, pw_word in enumerate(phoneme_word_list):
         word = word_list_info[pw_idx]
@@ -421,6 +422,8 @@ def render_lipsync_to_action(context, tgt_action, seq):
         if word_time_end < seq_time_start or word_time_start > seq_time_end:
             #print("skip")
             continue
+        
+        final_word = word
         
         phonemes = pw_word
         #phonemes = pw_word.split(' ')
@@ -462,7 +465,9 @@ def render_lipsync_to_action(context, tgt_action, seq):
         return
 
     #Add final rest after final word
-    phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
+    if final_word and phoneme_timings[-1]["group"] != "rest":
+        word_time_end = final_word["end"]
+        phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
                 
     for idx, p_timing in enumerate(phoneme_timings):
         #print(p_timing)
@@ -562,7 +567,9 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
                 # track = armature.animation_data.nla_tracks.new()
 
             track = armature.animation_data.nla_tracks.new()
-            track.strips.new(tgt_action.name, int(seq.frame_start + tgt_action.frame_range[0]), tgt_action)
+            strip = track.strips.new(tgt_action.name, int(seq.frame_start + tgt_action.frame_range[0]), tgt_action)
+            strip.extrapolation = 'NOTHING'
+            strip.blend_type = 'COMBINE'
         
         armature.animation_data.action = None
         

@@ -48,16 +48,16 @@ import bpy
 import json
 
 
-# def install_whisper():
-    # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-    # target = os.path.join(sys.prefix, 'lib', 'site-packages')
+def install_whisper():
+    python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+    target = os.path.join(sys.prefix, 'lib', 'site-packages')
      
-    # subprocess.call([python_exe, '-m', 'ensurepip'])
-    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
+    subprocess.call([python_exe, '-m', 'ensurepip'])
+    subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-    # #example package to install (SciPy):
-    # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
+    #example package to install (SciPy):
+    #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
+    subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
     
 def update_phoneme_table_path(self, context):
     print("--update_phoneme_table_path")
@@ -101,14 +101,14 @@ def load_phoneme_table(context):
     if not os.path.isfile(abs_path):
         addon_path = os.path.dirname(__file__) # for addon
         #addon_path = os.path.dirname(bpy.data.filepath)  # for standalone file
-        print("--addon_path : ", addon_path)
+        #print("--addon_path : ", addon_path)
         abs_path = os.path.join(addon_path, "phoneme_table_en.json")
         abs_path = bpy.path.abspath(abs_path)
-        print("--Default table: ", str(abs_path))
+        #print("--Default table: ", str(abs_path))
 
     with open(abs_path) as f:
         phoneme_table = json.load(f)
-#        print("ppppptable: ", phoneme_table)
+#        print("phoneme_table: ", phoneme_table)
         return phoneme_table
 
 #------------------------------------------
@@ -191,7 +191,11 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         name="Rest cooldown time",
         default=.5,
     )
-#cameraList:bpy.props.CollectionProperty(type=myPointerCollectionLs)
+    rig_action_suffix: bpy.props.StringProperty(
+        name="Action Name Suffix",
+        default='_parrot',
+    )
+    
 
 #------------------------------------------
 # Panel
@@ -210,9 +214,6 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 
         main_column = layout.column()
 
-        main_column.prop(props, "armature")
-        main_column.prop(props, "lipsync_action")
-
         main_column.prop(props, "espeak_path")
         main_column.prop(props, "whisper_library_model")
         main_column.prop(props, "phoneme_table_path")
@@ -227,9 +228,16 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         row.enabled = props.override_espeak_language_code
         row.prop(props, "espeak_language_code")
 
-        main_column.operator("plugin.parrot_lipsync_generator")
+        box_single = main_column.box()
+        box_single.prop(props, "lipsync_action")
+        box_single.operator("plugin.parrot_lipsync_to_action")
+
+        box_create_tracks = main_column.box()
+        box_create_tracks.prop(props, "armature")
+        box_create_tracks.prop(props, "rig_action_suffix")
+        box_create_tracks.operator("plugin.parrot_render_lipsync_to_rig_nla")
+        
         main_column.operator("plugin.parrot_reload_phoneme_table")
-        #main_column.operator("plugin.parrot_install_whisper")
 
 
 class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
@@ -272,293 +280,328 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
             box.prop(pose_props, "pose")
         
             
+class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
+    bl_label = "Setup"
+    bl_idname = "PLUGIN_PT_parrot_lipsync_setup"
+    bl_parent_id = "PLUGIN_PT_parrot_lipsync"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_options = {"DEFAULT_CLOSED"}
 
+    def draw(self, context):
+        props = context.scene.props
+        layout = self.layout
+
+        main_column = layout.column()
+        
+        main_column.operator("plugin.parrot_install_whisper")
+        main_column.operator("plugin.parrot_install_gruut")
+
+
+# valid_espeak_codes = ['af', 'am', 'an', 'as', 'az', 'ba', 'be', 'bg', 'bn', 'bpy', 'bs', 'ca', 'chr-US-Qaaa-x-west', 'cmn', 'cmn-latn-pinyin', 'cv', 'cy', 'da', 'de', 'en-us', 'en-029', 'en-gb', 'en-gb-scotland', 'en-gb-x-gbclan', 'en-gb-x-gbcwmd', 'en-gb-x-rp', 'en-us-nyc', 'eo', 'es', 'es-419', 'et', 'eu', 'fa', 'fa-latn', 'fi', 'fr-fr', 'fr-be', 'fr-ch', 'ga', 'gd', 'gn', 'grc', 'gu', 'hak', 'haw', 'he', 'hr', 'ht', 'hu', 'hy', 'hyw', 'ia', 'id', 'io', 'is', 'it', 'jbo', 'ka', 'kk', 'kl', 'kn', 'ko', 'kok', 'ku', 'ky', 'la', 'lb', 'lfn', 'lt', 'ltg', 'lv', 'mi', 'mk', 'ml', 'mr', 'mt', 'my', 'nb', 'nci', 'ne', 'nl', 'nog', 'om', 'or', 'pa', 'pap', 'piqd', 'pl', 'pt', 'pt-br', 'py', 'qdb', 'qu', 'quc', 'qya', 'ro', 'ru', 'ru-lv', 'sd', 'shn', 'si', 'sjn', 'sk', 'sl', 'smj', 'sq', 'sr', 'sv', 'sw', 'ta', 'te', 'th', 'tk', 'tn', 'tr', 'tt', 'ug', 'uk', 'ur', 'uz', 'vi', 'vi-vn-x-central', 'vi-vn-x-south', 'yue']
+
+# def get_espeak_lang_code(context, lang_code):
+    # props = context.scene.props
+    
+    # if props.override_espeak_language_code:
+        # return props.espeak_language_code
+
+    # codes = [code for code in valid_espeak_codes if code.startswith(lang_code)]
+    # if len(codes) > 0:
+        # return codes[0]
+
+    # return "en-us"
+
+        
+        
 #------------------------------------------
-# Render objects
+# Lipsync to action
 
-#ggg = 1
+def render_lipsync_to_action(context, tgt_action, seq):
+    #Putting imports here to avoid these libraries slowing down Blender loading addons
+    import whisper_timestamped as whisper
 
-valid_espeak_codes = ['af', 'am', 'an', 'as', 'az', 'ba', 'be', 'bg', 'bn', 'bpy', 'bs', 'ca', 'chr-US-Qaaa-x-west', 'cmn', 'cmn-latn-pinyin', 'cv', 'cy', 'da', 'de', 'en-us', 'en-029', 'en-gb', 'en-gb-scotland', 'en-gb-x-gbclan', 'en-gb-x-gbcwmd', 'en-gb-x-rp', 'en-us-nyc', 'eo', 'es', 'es-419', 'et', 'eu', 'fa', 'fa-latn', 'fi', 'fr-fr', 'fr-be', 'fr-ch', 'ga', 'gd', 'gn', 'grc', 'gu', 'hak', 'haw', 'he', 'hr', 'ht', 'hu', 'hy', 'hyw', 'ia', 'id', 'io', 'is', 'it', 'jbo', 'ka', 'kk', 'kl', 'kn', 'ko', 'kok', 'ku', 'ky', 'la', 'lb', 'lfn', 'lt', 'ltg', 'lv', 'mi', 'mk', 'ml', 'mr', 'mt', 'my', 'nb', 'nci', 'ne', 'nl', 'nog', 'om', 'or', 'pa', 'pap', 'piqd', 'pl', 'pt', 'pt-br', 'py', 'qdb', 'qu', 'quc', 'qya', 'ro', 'ru', 'ru-lv', 'sd', 'shn', 'si', 'sjn', 'sk', 'sl', 'smj', 'sq', 'sr', 'sv', 'sw', 'ta', 'te', 'th', 'tk', 'tn', 'tr', 'tt', 'ug', 'uk', 'ur', 'uz', 'vi', 'vi-vn-x-central', 'vi-vn-x-south', 'yue']
+    from gruut import sentences
 
-def get_espeak_lang_code(context, lang_code):
     props = context.scene.props
     
-    if props.override_espeak_language_code:
-        return props.espeak_language_code
+    update_phoneme_group_pose_list(context)
+    
+    
+    whisper_library_model = props.whisper_library_model
+    autodetect_language = props.autodetect_language
+    language_code = props.language_code
+    armature = props.armature
+    rest_cooldown_time = props.rest_cooldown_time
 
-    codes = [code for code in valid_espeak_codes if code.startswith(lang_code)]
-    if len(codes) > 0:
-        return codes[0]
+    
 
-    return "en-us"
+    tgt_action.fcurves.clear()
+    for marker in tgt_action.pose_markers.values():
+        tgt_action.pose_markers.remove(marker)
+
+    phoneme_table = load_phoneme_table(context)
+
+    phoneme_hash = {}
+    for info in phoneme_table["phonemes"]:
+        print("Adding phoneme ", info)
+        phoneme_hash[info["code"]] = info
+
+    group_pose_hash = {}
+    for pose_props in props.phoneme_poses:
+        group_pose_hash[pose_props.group] = pose_props.pose
+        
+#        print(phoneme_hash)
+    
+    model = whisper.load_model(whisper_library_model)
+            
+    path = bpy.path.abspath(seq.sound.filepath)
+#            print("Processing ", path)
+    
+    audio = whisper.load_audio(path)
+    audio_shaped = whisper.pad_or_trim(audio)
+    
+    final_language_code = language_code
+    
+    if autodetect_language:
+        # make log-Mel spectrogram and move to the same device as the model
+        mel = whisper.log_mel_spectrogram(audio_shaped).to(model.device)
+
+        # detect the spoken language
+        _, probs = model.detect_language(mel)
+        print(f"Detected language: {max(probs, key=probs.get)}")
+        final_language_code = max(probs, key=probs.get)
+
+    
+    whisper_result = whisper.transcribe(model, audio, language=final_language_code)
+
+    #print(json.dumps(whisper_result, indent = 2, ensure_ascii = False))
+    
+    print("Parsing track: ", seq.name)
+    print("Audio source: ", path)
+    print("Text: ", whisper_result["text"])
+
+    #TODO: Need to figure out how to choose proper language library
+#            espeak_backend = EspeakBackend(final_language_code)
+    
+    word_list = []
+    word_list_info = []
+    for seg in whisper_result["segments"]:
+        for word in seg["words"]:
+            word_list.append(word["text"])
+            word_list_info.append(word)
+            
+            #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
+            #word["text"]
+            #word["start"]
+            #word["end"]
+    
+    phoneme_word_list = []
+    for word in word_list:
+        
+        for sent in sentences(word, lang="en-us"):
+            phoneme_word_list.append(sent[0].phonemes)
+        
+    phoneme_timings = []
+
+    for pw_idx, pw_word in enumerate(phoneme_word_list):
+        word = word_list_info[pw_idx]
+        print(word)
+        print(pw_word)
+        
+        word_time_start = word["start"]
+        word_time_end = word["end"]
+        word_time_span = word_time_end - word_time_start
+        
+        phonemes = pw_word
+        #phonemes = pw_word.split(' ')
+        num_keys = len(phonemes) + 1
+
+        phoneme_timings.append({"group": "rest", "time": word_time_start})
+        
+        for p_idx, ele in enumerate(phonemes):
+            ele = ele.replace("ˈ", "")
+            ele = ele.replace("ˌ", "")
+            
+            if not ele in phoneme_hash:
+                print("Missing phoneme: \"%s\"" % ele)
+                continue
+            
+            group_name = phoneme_hash[ele]["group"]
+            #print("group_name " , group_name)
+            if not group_name in group_pose_hash:
+                continue
+
+            src_action = group_pose_hash[group_name]
+            if not src_action:
+                continue
+            
+            p_time = word_time_start + word_time_span * (float(p_idx + 1) / num_keys)
+            phoneme_timings.append({"group": group_name, "time": p_time})
+#                    phoneme_timings.append([group_name, p_time * context.scene.render.fps])
+        
+        if pw_idx < len(word_list_info) - 1:
+            next_word_start_time = word_list_info[pw_idx + 1]["start"]
+            if next_word_start_time - word_time_end > rest_cooldown_time:
+        
+                phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
+    
+    if len(phoneme_timings) == 0:
+        #No phonemes - skip
+        return
+
+    #Add final rest after final word
+    phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
+                
+    for idx, p_timing in enumerate(phoneme_timings):
+        #print(p_timing)
+                        
+        group_name = p_timing["group"]
+        #print("group_name " , group_name)
+        if not group_name in group_pose_hash:
+            continue
+        
+        src_action = group_pose_hash[group_name]
+        if not src_action:
+            continue
+            
+        marker = tgt_action.pose_markers.new(group_name)
+        marker.frame = int(p_timing["time"] * context.scene.render.fps)
+        #print("src_action.name " + src_action.name)
+        
+        
+        group_map = {}
+        
+        for src_group in src_action.groups:
+            if not src_group.name in tgt_action.groups:
+                tgt_group = tgt_action.groups.new(src_group.name)
+            else:
+                tgt_group = tgt_action.groups[src_group.name]
+            
+            group_map[src_group.name] = tgt_group
+        
+        for src_curve in src_action.fcurves:
+            #print("src_curve.data_path ", src_curve.data_path, src_curve.array_index)
+            
+            if src_curve.is_empty:
+                continue
+
+            tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
+            if not tgt_curve:
+                tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+                tgt_curve.group = group_map[src_curve.group.name]
+            
+            #start_co = curve.keyframe_points[0]
+            range = src_action.curve_frame_range
+            #print("range ", range)
+            for src_kf in src_curve.keyframe_points:
+                #co = kf.co
+                tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + int(p_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
+                
+                tgt_kf.interpolation = src_kf.interpolation
+                tgt_kf.easing = src_kf.easing
+                tgt_kf.handle_left = src_kf.handle_left
+                tgt_kf.handle_right = src_kf.handle_right
+                tgt_kf.period = src_kf.period
 
 
-class PLUGIN_OT_ParrotLipsyncGenerator(bpy.types.Operator):
+
+#------------------------------------------
+# Lipsync to rig NLA
+
+class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
     """
-    Parrot Lipsync Generator
+    Parrot Lipsync To Nla
     """
-    bl_label = "Generate Lipsync"
-    bl_idname = "plugin.parrot_lipsync_generator"
+    bl_label = "Render Lipsync to Rig NLA"
+    bl_idname = "plugin.parrot_render_lipsync_to_rig_nla"
     
     def execute(self, context):
         #Putting imports here to avoid these libraries slowing down Blender loading addons
-        import whisper_timestamped as whisper
 
-        # from phonemizer.backend import EspeakBackend
-        # from phonemizer.punctuation import Punctuation
-        # from phonemizer.separator import Separator
-        # from phonemizer.backend.espeak.wrapper import EspeakWrapper
+        props = context.scene.props
+        
+        # tgt_action = bpy.data.actions.new("lipsync_boo")
+        # seq = context.scene.sequence_editor.active_strip
+        # render_lipsync_to_action(context, tgt_action, seq)
+        
+        # return {'FINISHED'}        
+        ###################
+        
+        armature = props.armature
+        rig_action_suffix = props.rig_action_suffix
+        
+        if not armature:
+            self.report({"WARNING"}, "Armature is not set")
+            return {'CANCELLED'}
 
-        from gruut import sentences
+        if not armature.animation_data:
+            armature.animation_data_create()
+            
+        for seq in context.scene.sequence_editor.sequences_all:
+            if seq.type != 'SOUND' or not seq.select:
+                continue
+            
+            action_name = seq.name + rig_action_suffix
+            if action_name in bpy.data.actions:
+                tgt_action = bpy.data.actions[action_name]
+            else:
+                tgt_action = bpy.data.actions.new(action_name)
+            
+            #print("render to seq ", seq.name)
+            #print("render to action ", tgt_action.name)
+            render_lipsync_to_action(context, tgt_action, seq)
+
+            track = armature.animation_data.nla_tracks.new()
+            track.strips.new(tgt_action.name, int(seq.frame_start), tgt_action)
+        
+        armature.animation_data.action = None
+        
+        return {'FINISHED'}
+
+
+#------------------------------------------
+# Lipsync to action
+
+class PLUGIN_OT_ParrotRenderLipsyncToAction(bpy.types.Operator):
+    """
+    Parrot Lipsync To Action
+    """
+    bl_label = "Render Lipsync to Action"
+    bl_idname = "plugin.parrot_lipsync_to_action"
+    
+    def execute(self, context):
     
         props = context.scene.props
         
-        update_phoneme_group_pose_list(context)
-        
-        
-        espeak_path = props.espeak_path
-        whisper_library_model = props.whisper_library_model
-        autodetect_language = props.autodetect_language
-        language_code = props.language_code
         tgt_action = props.lipsync_action
-        armature = props.armature
-        rest_cooldown_time = props.rest_cooldown_time
-
-        # if not armature:
-            # self.report({"WARNING"}, "Armature is not set")
-            # return {'CANCELLED'}
-        
         
         if not tgt_action:
             tgt_action = bpy.data.actions.new("lipsync")
             
             props.lipsync_action = tgt_action
 
-        tgt_action.fcurves.clear()
-        for marker in tgt_action.pose_markers.values():
-            tgt_action.pose_markers.remove(marker)
+        seq = context.scene.sequence_editor.active_strip
 
-        phoneme_table = load_phoneme_table(context)
+        if not seq or seq.type != 'SOUND':
+            self.report({"WARNING"}, "You must select an audio track in the sequencer.")
+            return {'CANCELLED'}
+                
+        render_lipsync_to_action(context, tgt_action, seq)
 
-        phoneme_hash = {}
-        for info in phoneme_table["phonemes"]:
-            print("Adding phoneme ", info)
-            phoneme_hash[info["code"]] = info
-
-        group_pose_hash = {}
-        for pose_props in props.phoneme_poses:
-            group_pose_hash[pose_props.group] = pose_props.pose
-            
-#        print(phoneme_hash)
+        ##############
         
-        model = whisper.load_model(whisper_library_model)
-        
-        #EspeakWrapper.set_library(espeak_path)
-           
-        
-        for seq in context.scene.sequence_editor.sequences_all:
-            if seq.type != 'SOUND' or not seq.select:
-                continue
-                
-            path = bpy.path.abspath(seq.sound.filepath)
-#            print("Processing ", path)
-            
-            audio = whisper.load_audio(path)
-            audio_shaped = whisper.pad_or_trim(audio)
-            
-            final_language_code = language_code
-            
-            if autodetect_language:
-                # make log-Mel spectrogram and move to the same device as the model
-                mel = whisper.log_mel_spectrogram(audio_shaped).to(model.device)
+            # seq.frame_duration
+            # #Timeline position
+            # seq.frame_final_start
+            # seq.frame_final_end
 
-                # detect the spoken language
-                _, probs = model.detect_language(mel)
-                print(f"Detected language: {max(probs, key=probs.get)}")
-                final_language_code = max(probs, key=probs.get)
-
+            # #Frames in track being rendered
+            # seq.frame_offset_start
+            # seq.frame_offset_end
             
-            whisper_result = whisper.transcribe(model, audio, language=final_language_code)
-
-            #print(json.dumps(whisper_result, indent = 2, ensure_ascii = False))
-            
-            print("Parsing track: ", seq.name)
-            print("Audio source: ", path)
-            print("Text: ", whisper_result["text"])
-
-            #TODO: Need to figure out how to choose proper language library
-#            espeak_backend = EspeakBackend(final_language_code)
-            
-            word_list = []
-            word_list_info = []
-            for seg in whisper_result["segments"]:
-                for word in seg["words"]:
-                    word_list.append(word["text"])
-                    word_list_info.append(word)
-                    
-                    #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
-                    #word["text"]
-                    #word["start"]
-                    #word["end"]
-            
-            
-            #espeak_lang_code = get_espeak_lang_code(context, final_language_code)
-            #print("Using espeak language code ", espeak_lang_code)
-            #espeak_backend = EspeakBackend(espeak_lang_code)
-#            espeak_backend = EspeakBackend("en-us")
-            #espeak_separator = Separator(phone=' ', word=None)
-
-            phoneme_word_list = []
-            for word in word_list:
-                
-                for sent in sentences(word, lang="en-us"):
-                    phoneme_word_list.append(sent[0].phonemes)
-                        #*s_word.phonemes
-            
-            #phoneme_word_list = espeak_backend.phonemize(word_list, separator=espeak_separator, strip=True)
-            
-            phoneme_timings = []
-
-            for pw_idx, pw_word in enumerate(phoneme_word_list):
-                word = word_list_info[pw_idx]
-                print(word)
-                print(pw_word)
-                
-                word_time_start = word["start"]
-                word_time_end = word["end"]
-                word_time_span = word_time_end - word_time_start
-                
-                phonemes = pw_word
-                #phonemes = pw_word.split(' ')
-                num_keys = len(phonemes) + 1
-
-                phoneme_timings.append({"group": "rest", "time": word_time_start})
-                
-                for p_idx, ele in enumerate(phonemes):
-                    ele = ele.replace("ˈ", "")
-                    ele = ele.replace("ˌ", "")
-                    
-                    if not ele in phoneme_hash:
-                        print("Missing phoneme: \"%s\"" % ele)
-                        continue
-                    
-                    group_name = phoneme_hash[ele]["group"]
-                    #print("group_name " , group_name)
-                    if not group_name in group_pose_hash:
-                        continue
-
-                    src_action = group_pose_hash[group_name]
-                    if not src_action:
-                        continue
-                    
-                    p_time = word_time_start + word_time_span * (float(p_idx + 1) / num_keys)
-                    phoneme_timings.append({"group": group_name, "time": p_time})
-#                    phoneme_timings.append([group_name, p_time * context.scene.render.fps])
-                
-                if pw_idx < len(word_list_info) - 1:
-                    next_word_start_time = word_list_info[pw_idx + 1]["start"]
-                    if next_word_start_time - word_time_end > rest_cooldown_time:
-                
-                        phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
-            
-            if len(phoneme_timings) == 0:
-                #No phonemes - skip to next track
-                continue
-
-            #Add final rest after final word
-            phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
-            
-            # phoneme_timings_with_rests = []
-            
-            # print("phoneme_timings[0] " , phoneme_timings[0])
-            
-            # if phoneme_timings[0]["time"] > rest_cooldown_time:
-                # phoneme_timings_with_rests.append({"group": "rest", "time": phoneme_timings[0]["time"] - rest_cooldown_time})
-                
-            # for p_idx in range(len(phoneme_timings) - 1):
-                # phoneme_timings_with_rests.append(phoneme_timings[p_idx])
-                
-                # delta_time = phoneme_timings[p_idx + 1]["time"] - phoneme_timings[p_idx]["time"]
-                # if delta_time >= rest_cooldown_time:
-                    # phoneme_timings_with_rests.append({"group": "rest", "time": phoneme_timings[p_idx]["time"] + delta_time / 2.0})
-                    
-            # phoneme_timings_with_rests.append({"group": "rest", "time": phoneme_timings[-1]["time"] + rest_cooldown_time})
-
-            # for pt in phoneme_timings:
-                # print(pt)
-
-            #return {'FINISHED'}
-            
-            #####################
-            
-            for idx, p_timing in enumerate(phoneme_timings):
-                #print(p_timing)
-                                
-                group_name = p_timing["group"]
-                #print("group_name " , group_name)
-                if not group_name in group_pose_hash:
-                    continue
-                
-                src_action = group_pose_hash[group_name]
-                if not src_action:
-                    continue
-                    
-                marker = tgt_action.pose_markers.new(group_name)
-                marker.frame = int(p_timing["time"] * context.scene.render.fps)
-                #print("src_action.name " + src_action.name)
-                
-                
-                group_map = {}
-                
-                for src_group in src_action.groups:
-                    if not src_group.name in tgt_action.groups:
-                        tgt_group = tgt_action.groups.new(src_group.name)
-                    else:
-                        tgt_group = tgt_action.groups[src_group.name]
-                    
-                    group_map[src_group.name] = tgt_group
-                
-                for src_curve in src_action.fcurves:
-                    #print("curve.data_path ", curve.data_path, curve.array_index)
-                    
-                    if src_curve.is_empty:
-                        continue
-
-                    tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
-                    if not tgt_curve:
-                        tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
-                        tgt_curve.group = group_map[src_curve.group.name]
-                    
-                    #start_co = curve.keyframe_points[0]
-                    range = src_action.curve_frame_range
-                    #print("range ", range)
-                    for src_kf in src_curve.keyframe_points:
-                        #co = kf.co
-                        tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + int(p_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
-                        
-                        tgt_kf.interpolation = src_kf.interpolation
-                        tgt_kf.easing = src_kf.easing
-                        tgt_kf.handle_left = src_kf.handle_left
-                        tgt_kf.handle_right = src_kf.handle_right
-                        tgt_kf.period = src_kf.period
-####
- 
-            #print("Processing ", seq.name)
-            #print("Processing ", seq.sound.filepath)
-            
-            #bpy.data.sounds
-            
-            seq.frame_duration
-            #Timeline position
-            seq.frame_final_start
-            seq.frame_final_end
-
-            #Frames in track being rendered
-            seq.frame_offset_start
-            seq.frame_offset_end
-            
-            #bpy.type.Sound
-            seq.sound.filepath
+            # #bpy.type.Sound
+            # seq.sound.filepath
             
             
         
@@ -599,31 +642,23 @@ class PLUGIN_OT_ParrotInstallWhisper(bpy.types.Operator):
         return {'FINISHED'}
 
 
-### REGISTRATION ###
-
-# classes=[
-    # ParrotPoseProps,
-    # ParrotLipsyncProps,
-    # PLUGIN_PT_ParrotLipsyncPanel,
-    # PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
-    # PLUGIN_OT_ParrotLipsyncGenerator,
-    # PLUGIN_OT_ParrotInstallWhisper,
-# ]
-
-# def register():
-    # for cls in classes:
-        # bpy.utils.register_class(cls)
-        
-    # bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
+class PLUGIN_OT_ParrotInstallGruut(bpy.types.Operator):
+    """
+    Install Gruut
+    """
+    bl_label = "Install/Update Gruut"
+    bl_idname = "plugin.parrot_install_gruut"
     
-    # # addon_path =  os.path.dirname(__file__)
-    # # icons_dir = os.path.join(addon_path, "icons")    
+    def execute(self, context):
+        python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+        target = os.path.join(sys.prefix, 'lib', 'site-packages')
+         
+        subprocess.call([python_exe, '-m', 'ensurepip'])
+        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-# def unregister():
-    # for cls in classes:
-        # bpy.utils.unregister_class(cls)
-        
-    # bpy.types.Scene.props = None
+        #example package to install (SciPy):
+        #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
+        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'gruut', '-t', target])
 
-# if __name__ == "__main__":
-    # register()
+        return {'FINISHED'}
+

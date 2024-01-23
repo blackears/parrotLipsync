@@ -37,10 +37,12 @@ from .parrot_lipsync import ParrotPoseProps
 from .parrot_lipsync import ParrotLipsyncProps
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPanel
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel
-from .parrot_lipsync import PLUGIN_OT_ParrotLipsyncGenerator
+from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncSetupPanel
+from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToAction
+from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToRigNla
 from .parrot_lipsync import PLUGIN_OT_ParrotInstallWhisper
+from .parrot_lipsync import PLUGIN_OT_ParrotInstallGruut
 from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
-#from .parrot_lipsync import update_phoneme_group_pose_list
 
 
 ### REGISTRATION ###
@@ -50,8 +52,11 @@ classes=[
     ParrotLipsyncProps,
     PLUGIN_PT_ParrotLipsyncPanel,
     PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
-    PLUGIN_OT_ParrotLipsyncGenerator,
-    PLUGIN_OT_ParrotInstallWhisper,
+#    PLUGIN_PT_ParrotLipsyncSetupPanel,
+    PLUGIN_OT_ParrotRenderLipsyncToAction,
+    PLUGIN_OT_ParrotRenderLipsyncToRigNla,
+#    PLUGIN_OT_ParrotInstallWhisper,
+#    PLUGIN_OT_ParrotInstallGruut,
     PLUGIN_OT_ParrotReloadPhonemeTable,
 ]
 

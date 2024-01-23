@@ -13,7 +13,6 @@ The addon should automatically install Whisper if it is not already installed - 
 
 ```
 ./python.exe -m pip install --upgrade whisper_timestamped
-./python.exe -m pip install --upgrade phonemizer
 ./python.exe -m pip install --upgrade gruut
 ```
 

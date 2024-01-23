@@ -1,2 +1,6 @@
 /*.blend1
 /art/images/*.kra~
+/testing/*.blend1
+/testing
+/build
+/deploy

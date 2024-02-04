@@ -37,6 +37,7 @@ import subprocess
 import sys
 import os
 import bpy
+import hashlib
 
 # import whisper_timestamped as whisper
 
@@ -156,16 +157,16 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
         default="en"
     )
-    override_espeak_language_code: bpy.props.BoolProperty(
-        name="Specify Espeak Language Code",
-        description="If checked, Espeak will use the given code for phonemization.",
-        default=False,
-    )
-    espeak_language_code: bpy.props.StringProperty(
-        name="Language code",
-        description="Use this to override the language used by the Espeak phonemizer.  'en-us' will work for all languages, although using a more language specific code will give better results for non-english languages.",
-        default="en-us"
-    )
+    # override_espeak_language_code: bpy.props.BoolProperty(
+        # name="Specify Espeak Language Code",
+        # description="If checked, Espeak will use the given code for phonemization.",
+        # default=False,
+    # )
+    # espeak_language_code: bpy.props.StringProperty(
+        # name="Language code",
+        # description="Use this to override the language used by the Espeak phonemizer.  'en-us' will work for all languages, although using a more language specific code will give better results for non-english languages.",
+        # default="en-us"
+    # )
     phoneme_table_path: bpy.props.StringProperty(
         name="Phoneme table file",
         default='//phoneme_table_en.json',
@@ -223,10 +224,10 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         row.enabled = not props.autodetect_language
         row.prop(props, "language_code")
 
-        main_column.prop(props, "override_espeak_language_code")
-        row = main_column.row()
-        row.enabled = props.override_espeak_language_code
-        row.prop(props, "espeak_language_code")
+        # main_column.prop(props, "override_espeak_language_code")
+        # row = main_column.row()
+        # row.enabled = props.override_espeak_language_code
+        # row.prop(props, "espeak_language_code")
 
         box_single = main_column.box()
         box_single.prop(props, "lipsync_action")
@@ -251,8 +252,6 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
     def draw(self, context):
         props = context.scene.props
         layout = self.layout
-
-        #update_phoneme_group_pose_list(context)
         
         phoneme_table = load_phoneme_table(context)
         
@@ -317,47 +316,35 @@ class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
 #------------------------------------------
 # Lipsync to action
 
-def render_lipsync_to_action(context, tgt_action, seq):
+phoneme_cache = {}
+word_list_info_cache = {}
+
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+            
+    return hash_md5.hexdigest()
+    
+def get_phonemes_from_file(context, path):
     #Putting imports here to avoid these libraries slowing down Blender loading addons
     import whisper_timestamped as whisper
 
     from gruut import sentences
-
+    
     props = context.scene.props
-    
-    update_phoneme_group_pose_list(context)
-    
     
     whisper_library_model = props.whisper_library_model
     autodetect_language = props.autodetect_language
     language_code = props.language_code
-    armature = props.armature
-    rest_cooldown_time = props.rest_cooldown_time
 
-    
-
-    tgt_action.fcurves.clear()
-    for marker in tgt_action.pose_markers.values():
-        tgt_action.pose_markers.remove(marker)
-
-    phoneme_table = load_phoneme_table(context)
-
-    phoneme_hash = {}
-    for info in phoneme_table["phonemes"]:
-        print("Adding phoneme ", info)
-        phoneme_hash[info["code"]] = info
-
-    group_pose_hash = {}
-    for pose_props in props.phoneme_poses:
-        group_pose_hash[pose_props.group] = pose_props.pose
-        
-#        print(phoneme_hash)
+    md5_hash = md5(path)
+    if md5_hash in phoneme_cache:
+        return (word_list_info_cache[md5_hash], phoneme_cache[md5_hash])
     
     model = whisper.load_model(whisper_library_model)
-            
-    path = bpy.path.abspath(seq.sound.filepath)
-#            print("Processing ", path)
-    
+
     audio = whisper.load_audio(path)
     audio_shaped = whisper.pad_or_trim(audio)
     
@@ -377,8 +364,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
 
     #print(json.dumps(whisper_result, indent = 2, ensure_ascii = False))
     
-    print("Parsing track: ", seq.name)
-    print("Audio source: ", path)
+#    print("Audio source: ", path)
     print("Text: ", whisper_result["text"])
 
     #TODO: Need to figure out how to choose proper language library
@@ -401,19 +387,114 @@ def render_lipsync_to_action(context, tgt_action, seq):
         
         for sent in sentences(word, lang="en-us"):
             phoneme_word_list.append(sent[0].phonemes)
+
+    word_list_info_cache[md5_hash] = word_list_info
+    phoneme_cache[md5_hash] = phoneme_word_list
+    
+    return (word_list_info, phoneme_word_list)
+
+def render_lipsync_to_action(context, tgt_action, seq):
+
+    props = context.scene.props
+    
+    
+    #whisper_library_model = props.whisper_library_model
+    #autodetect_language = props.autodetect_language
+    #language_code = props.language_code
+    armature = props.armature
+    rest_cooldown_time = props.rest_cooldown_time
+
+    path = bpy.path.abspath(seq.sound.filepath)
+    print("Processing audio file ", path)
+    print("Parsing track: ", seq.name)        
+#        print(phoneme_hash)
+    
+            
+#            print("Processing ", path)
+    #################
+    # md5_hash = hashlib.md5("example string").hexdigest()
+    # if md5_hash in phoneme_cache:
+        # pass
+    
+    # audio = whisper.load_audio(path)
+    # audio_shaped = whisper.pad_or_trim(audio)
+    
+    # final_language_code = language_code
+    
+    # if autodetect_language:
+        # # make log-Mel spectrogram and move to the same device as the model
+        # mel = whisper.log_mel_spectrogram(audio_shaped).to(model.device)
+
+        # # detect the spoken language
+        # _, probs = model.detect_language(mel)
+        # print(f"Detected language: {max(probs, key=probs.get)}")
+        # final_language_code = max(probs, key=probs.get)
+
+    
+    # whisper_result = whisper.transcribe(model, audio, language=final_language_code)
+
+    # #print(json.dumps(whisper_result, indent = 2, ensure_ascii = False))
+    
+    # print("Parsing track: ", seq.name)
+    # print("Audio source: ", path)
+    # print("Text: ", whisper_result["text"])
+
+    # #TODO: Need to figure out how to choose proper language library
+# #            espeak_backend = EspeakBackend(final_language_code)
+    
+    # word_list = []
+    # word_list_info = []
+    # for seg in whisper_result["segments"]:
+        # for word in seg["words"]:
+            # word_list.append(word["text"])
+            # word_list_info.append(word)
+            
+            # #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
+            # #word["text"]
+            # #word["start"]
+            # #word["end"]
+    
+    # phoneme_word_list = []
+    # for word in word_list:
         
+        # for sent in sentences(word, lang="en-us"):
+            # phoneme_word_list.append(sent[0].phonemes)
+        # ##########################
     phoneme_timings = []
+    word_list_info, phoneme_word_list = get_phonemes_from_file(context, path)
+
+    ##################
+    #print("word_list_info ", word_list_info)
+    #print("phoneme_word_list ", phoneme_word_list)
+    #return
+
+    update_phoneme_group_pose_list(context)
+    
+    tgt_action.fcurves.clear()
+    for marker in tgt_action.pose_markers.values():
+        tgt_action.pose_markers.remove(marker)
+
+    phoneme_table = load_phoneme_table(context)
+
+    phoneme_hash = {}
+    for info in phoneme_table["phonemes"]:
+        print("Adding phoneme ", info)
+        phoneme_hash[info["code"]] = info
+
+    group_pose_hash = {}
+    for pose_props in props.phoneme_poses:
+        group_pose_hash[pose_props.group] = pose_props.pose
 
     seq_time_start = seq.frame_offset_start / context.scene.render.fps
     seq_time_end = (seq.frame_offset_start + seq.frame_final_duration) / context.scene.render.fps
 
-    #print("seq_time_start ", seq_time_start, " seq_time_end ", seq_time_end)
+    print("seq_time_start ", seq_time_start, " seq_time_end ", seq_time_end)
     final_word = None
-
+    
     for pw_idx, pw_word in enumerate(phoneme_word_list):
         word = word_list_info[pw_idx]
-        print(word)
-        print(pw_word)
+        print("word ", word)
+        print("pw_word", pw_word)
         
         word_time_start = word["start"]
         word_time_end = word["end"]
@@ -469,6 +550,9 @@ def render_lipsync_to_action(context, tgt_action, seq):
         word_time_end = final_word["end"]
         phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
                 
+                
+    #print("phoneme_timings ", phoneme_timings)
+    
     for idx, p_timing in enumerate(phoneme_timings):
         #print(p_timing)
                         
@@ -548,9 +632,13 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
         
         armature.animation_data.use_nla = True
         
+        track_cache = {}
+        
         for seq in context.scene.sequence_editor.sequences_all:
             if seq.type != 'SOUND' or not seq.select:
                 continue
+            
+            seq.channel
             
             action_name = seq.name + rig_action_suffix
             if action_name in bpy.data.actions:
@@ -566,7 +654,12 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
                 # #First track is not used
                 # track = armature.animation_data.nla_tracks.new()
 
-            track = armature.animation_data.nla_tracks.new()
+            if seq.channel in track_cache:
+                track = track_cache[seq.channel]
+            else:
+                track = armature.animation_data.nla_tracks.new()
+                track_cache[seq.channel] = track
+                
             strip = track.strips.new(tgt_action.name, int(seq.frame_start + tgt_action.frame_range[0]), tgt_action)
             strip.extrapolation = 'NOTHING'
             strip.blend_type = 'COMBINE'

@@ -66,13 +66,14 @@ def update_phoneme_table_path(self, context):
     pass
  
 def update_phoneme_group_pose_list(context):
-    print("--update_phoneme_group_pose_list")
+    #print("--update_phoneme_group_pose_list")
     phoneme_table = load_phoneme_table(context)
     
     group_list = [info["group"] for info in phoneme_table["phonemes"]]
     group_list = list(dict.fromkeys(group_list))
     group_list.sort()
-    group_list.insert(0, "rest")
+    if not "rest" in group_list:
+        group_list.insert(0, "rest")
     
     groups_already_listed = [p.group for p in context.scene.props.phoneme_poses]
     #context.scene.props.phoneme_poses.clear()
@@ -157,6 +158,14 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
         default="en"
     )
+    key_interpolation: bpy.props.EnumProperty(
+        name="Key Interpolation",
+        items= [('constant', 'constant', 'constant interpolation'),
+               ('linear', 'linear', 'linaer interpolation'),
+               ('bezier', 'bezier', 'bezier interpolation'),
+               ('default', 'default', 'use the interpolation type set on the key'),],
+        default='default'
+    )
     # override_espeak_language_code: bpy.props.BoolProperty(
         # name="Specify Espeak Language Code",
         # description="If checked, Espeak will use the given code for phonemization.",
@@ -178,9 +187,9 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description="Mouth poses",
         type=ParrotPoseProps
     )
-    armature: bpy.props.PointerProperty(
-        name = "Armature",
-        description = "Armature you wish to apply lipsync to.",
+    target_object: bpy.props.PointerProperty(
+        name = "Target Object",
+        description = "Object you wish to apply lipsync to.",
         type=bpy.types.Object
     )
     lipsync_action: bpy.props.PointerProperty(
@@ -215,9 +224,10 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 
         main_column = layout.column()
 
-        main_column.prop(props, "espeak_path")
+#        main_column.prop(props, "espeak_path")
         main_column.prop(props, "whisper_library_model")
         main_column.prop(props, "phoneme_table_path")
+        main_column.prop(props, "key_interpolation")
 
         main_column.prop(props, "autodetect_language")        
         row = main_column.row()
@@ -229,12 +239,13 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         # row.enabled = props.override_espeak_language_code
         # row.prop(props, "espeak_language_code")
 
+
         box_single = main_column.box()
         box_single.prop(props, "lipsync_action")
         box_single.operator("plugin.parrot_lipsync_to_action")
 
         box_create_tracks = main_column.box()
-        box_create_tracks.prop(props, "armature")
+        box_create_tracks.prop(props, "target_object")
         box_create_tracks.prop(props, "rig_action_suffix")
         box_create_tracks.operator("plugin.parrot_render_lipsync_to_rig_nla")
         
@@ -401,72 +412,16 @@ def render_lipsync_to_action(context, tgt_action, seq):
     #whisper_library_model = props.whisper_library_model
     #autodetect_language = props.autodetect_language
     #language_code = props.language_code
-    armature = props.armature
+    target_object = props.target_object
     rest_cooldown_time = props.rest_cooldown_time
+    key_interpolation = props.key_interpolation
 
     path = bpy.path.abspath(seq.sound.filepath)
-    print("Processing audio file ", path)
-    print("Parsing track: ", seq.name)        
-#        print(phoneme_hash)
+    #print("Processing audio file ", path)
+    #print("Parsing track: ", seq.name)        
     
-            
-#            print("Processing ", path)
-    #################
-    # md5_hash = hashlib.md5("example string").hexdigest()
-    # if md5_hash in phoneme_cache:
-        # pass
-    
-    # audio = whisper.load_audio(path)
-    # audio_shaped = whisper.pad_or_trim(audio)
-    
-    # final_language_code = language_code
-    
-    # if autodetect_language:
-        # # make log-Mel spectrogram and move to the same device as the model
-        # mel = whisper.log_mel_spectrogram(audio_shaped).to(model.device)
-
-        # # detect the spoken language
-        # _, probs = model.detect_language(mel)
-        # print(f"Detected language: {max(probs, key=probs.get)}")
-        # final_language_code = max(probs, key=probs.get)
-
-    
-    # whisper_result = whisper.transcribe(model, audio, language=final_language_code)
-
-    # #print(json.dumps(whisper_result, indent = 2, ensure_ascii = False))
-    
-    # print("Parsing track: ", seq.name)
-    # print("Audio source: ", path)
-    # print("Text: ", whisper_result["text"])
-
-    # #TODO: Need to figure out how to choose proper language library
-# #            espeak_backend = EspeakBackend(final_language_code)
-    
-    # word_list = []
-    # word_list_info = []
-    # for seg in whisper_result["segments"]:
-        # for word in seg["words"]:
-            # word_list.append(word["text"])
-            # word_list_info.append(word)
-            
-            # #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
-            # #word["text"]
-            # #word["start"]
-            # #word["end"]
-    
-    # phoneme_word_list = []
-    # for word in word_list:
-        
-        # for sent in sentences(word, lang="en-us"):
-            # phoneme_word_list.append(sent[0].phonemes)
-        # ##########################
     phoneme_timings = []
     word_list_info, phoneme_word_list = get_phonemes_from_file(context, path)
-
-    ##################
-    #print("word_list_info ", word_list_info)
-    #print("phoneme_word_list ", phoneme_word_list)
-    #return
 
     update_phoneme_group_pose_list(context)
     
@@ -481,6 +436,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
         print("Adding phoneme ", info)
         phoneme_hash[info["code"]] = info
 
+    #Map group names to pose actions
     group_pose_hash = {}
     for pose_props in props.phoneme_poses:
         group_pose_hash[pose_props.group] = pose_props.pose
@@ -589,7 +545,8 @@ def render_lipsync_to_action(context, tgt_action, seq):
             tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
             if not tgt_curve:
                 tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
-                tgt_curve.group = group_map[src_curve.group.name]
+                if src_curve.group:
+                    tgt_curve.group = group_map[src_curve.group.name]
             
             #start_co = curve.keyframe_points[0]
             range = src_action.curve_frame_range
@@ -599,6 +556,13 @@ def render_lipsync_to_action(context, tgt_action, seq):
                 tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + int(p_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
                 
                 tgt_kf.interpolation = src_kf.interpolation
+                if key_interpolation == "constant":
+                    tgt_kf.interpolation = 'CONSTANT'
+                elif key_interpolation == "linear":
+                    tgt_kf.interpolation = 'LINEAR'
+                elif key_interpolation == "bezier":
+                    tgt_kf.interpolation = 'BEZIER'
+                    
                 tgt_kf.easing = src_kf.easing
                 tgt_kf.handle_left = src_kf.handle_left
                 tgt_kf.handle_right = src_kf.handle_right
@@ -620,17 +584,17 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
 
         props = context.scene.props
         
-        armature = props.armature
+        target_object = props.target_object
         rig_action_suffix = props.rig_action_suffix
         
-        if not armature:
-            self.report({"WARNING"}, "Armature is not set")
+        if not target_object:
+            self.report({"WARNING"}, "Target object is not set")
             return {'CANCELLED'}
 
-        if not armature.animation_data:
-            armature.animation_data_create()
+        if not target_object.animation_data:
+            target_object.animation_data_create()
         
-        armature.animation_data.use_nla = True
+        target_object.animation_data.use_nla = True
         
         track_cache = {}
         
@@ -638,33 +602,36 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
             if seq.type != 'SOUND' or not seq.select:
                 continue
             
-            seq.channel
-            
             action_name = seq.name + rig_action_suffix
             if action_name in bpy.data.actions:
                 tgt_action = bpy.data.actions[action_name]
             else:
                 tgt_action = bpy.data.actions.new(action_name)
             
-            #print("render to seq ", seq.name)
-            #print("render to action ", tgt_action.name)
+            print("render to seq ", seq.name)
+            print("render to action ", tgt_action.name)
             render_lipsync_to_action(context, tgt_action, seq)
             
-            # if len(armature.animation_data.nla_tracks) == 0:
-                # #First track is not used
-                # track = armature.animation_data.nla_tracks.new()
-
+            track = None
             if seq.channel in track_cache:
+                #print("reusing track ", seq.channel)
                 track = track_cache[seq.channel]
             else:
-                track = armature.animation_data.nla_tracks.new()
+                track = target_object.animation_data.nla_tracks.new()
+
                 track_cache[seq.channel] = track
+                #print("creating track ", track.name, " on object ", target_object.name)
                 
             strip = track.strips.new(tgt_action.name, int(seq.frame_start + tgt_action.frame_range[0]), tgt_action)
             strip.extrapolation = 'NOTHING'
-            strip.blend_type = 'COMBINE'
+            strip.blend_type = 'REPLACE'
+            print("adding strip ", strip.name)
         
-        armature.animation_data.action = None
+        if not track_cache:
+            self.report({"WARNING"}, "No sound tracks selected")
+            return {'CANCELLED'}
+        
+        target_object.animation_data.action = None
         
         return {'FINISHED'}
 

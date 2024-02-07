@@ -49,7 +49,7 @@ Open a terminal window and go into your Blender installation's python directory 
 ./python.exe -m pip install --upgrade gruut
 ```
 
-### Indstalling the ParrotLipsync addon
+### Installing the ParrotLipsync addon
 
 You can install the addon by 
 * opening Blender's `Edit/Preferences` menu
@@ -58,6 +58,20 @@ You can install the addon by
 * browsing to the `parrot_lipsync.zip` file
 
 Once installed, make sure that you check the box to enable it.  A new tab will appear in the viewport right hand tab menu.
+
+## Editing the Phoneme Table
+
+Parrot Lipsync uses a separate JSON file which defines what mouth positions to use and which phonemes are used for which mouth positions.  By default it will use the file named `phoneme_table_en.json` which comes with the addon.  This file can be edited to change which mouth position groups are used and which phonemes should be used for each mouth position.
+
+If you wish to define your own phoneme table, it is recommended that you make a copy of `phoneme_table_en.json`, add your customizations to it and then set the `Phoneme table file` field of the Parrot UI to point to your custom file.
+
+### Description of the Phoneme table
+
+The phoneme table has two main sections:
+
+The `groups` section defines each mouth position that your animation will use.  The groups are what you will assign mouth poses to in the addon UI.  The `name` field defines the name of the group and the `description` field lets you add some descriptive text to explain to the user what sounds this mouth pose is meant to make (and which is displayed as a hint).  The groups will also always include a special group called `rest`, even if you do not explicitly define it in the JSOn file.  The `rest` group is meant to represent the mouth when it is closed between words.
+
+The `phonemes` section is where you let Parrot know which phoneme symbols belong to which group.  The `code` field is the International Phonetic Alphabetic code for the syllable and the `group` field indicates which mouth pose group the syllable belongs to.  The `class` and `example` fields are not currently used by Parrot but meant to provide usage hints to the user and might be used in a future version of Parrot.
 
 
 ## Acknowledgements

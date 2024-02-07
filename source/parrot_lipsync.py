@@ -247,7 +247,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         box_create_tracks = main_column.box()
         box_create_tracks.prop(props, "target_object")
         box_create_tracks.prop(props, "rig_action_suffix")
-        box_create_tracks.operator("plugin.parrot_render_lipsync_to_rig_nla")
+        box_create_tracks.operator("plugin.parrot_render_lipsync_to_object_nla")
         
         main_column.operator("plugin.parrot_reload_phoneme_table")
 
@@ -577,8 +577,8 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
     """
     Parrot Lipsync To Nla
     """
-    bl_label = "Render Lipsync to Rig NLA"
-    bl_idname = "plugin.parrot_render_lipsync_to_rig_nla"
+    bl_label = "Render Lipsync to Object NLA"
+    bl_idname = "plugin.parrot_render_lipsync_to_object_nla"
     
     def execute(self, context):
 

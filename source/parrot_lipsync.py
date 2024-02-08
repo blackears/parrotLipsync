@@ -608,8 +608,8 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
             else:
                 tgt_action = bpy.data.actions.new(action_name)
             
-            print("render to seq ", seq.name)
-            print("render to action ", tgt_action.name)
+            #print("render to seq ", seq.name)
+            #print("render to action ", tgt_action.name)
             render_lipsync_to_action(context, tgt_action, seq)
             
             track = None
@@ -625,7 +625,7 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
             strip = track.strips.new(tgt_action.name, int(seq.frame_start + tgt_action.frame_range[0]), tgt_action)
             strip.extrapolation = 'NOTHING'
             strip.blend_type = 'REPLACE'
-            print("adding strip ", strip.name)
+            #print("adding strip ", strip.name)
         
         if not track_cache:
             self.report({"WARNING"}, "No sound tracks selected")

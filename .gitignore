@@ -5,3 +5,5 @@
 /build
 /deploy
 /examples/lipsync_2d/*.blend1
+/examples/*.blend1
+/examples/basic_3d_rig/*.blend1

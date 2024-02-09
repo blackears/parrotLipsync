@@ -1,4 +1,4 @@
-# Parrot Lipsync
+# Parrot Automatic Lipsync for Blender
 
 This is an addon for Blender that lets you automically generate lipsync data from audio tracks.  It uses the Whisper AI library to turn audio into words, and then Espeak to turn words into phonemes.
 

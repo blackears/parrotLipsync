@@ -2,6 +2,7 @@
 
 This is an addon for Blender that lets you automically generate lipsync data from audio tracks.  It uses the Whisper AI library to turn audio into words, and then Espeak to turn words into phonemes.
 
+[![Video - overview](https://img.youtube.com/vi/VCXyHdBmBwQ/0.jpg)](https://www.youtube.com/watch?v=VCXyHdBmBwQ)
 
 ## Installation
 
@@ -64,6 +65,9 @@ Once installed, make sure that you check the box to enable it.  A new tab will a
 Parrot Lipsync uses a separate JSON file which defines what mouth positions to use and which phonemes are used for which mouth positions.  By default it will use the file named `phoneme_table_en.json` which comes with the addon.  This file can be edited to change which mouth position groups are used and which phonemes should be used for each mouth position.
 
 If you wish to define your own phoneme table, it is recommended that you make a copy of `phoneme_table_en.json`, add your customizations to it and then set the `Phoneme table file` field of the Parrot UI to point to your custom file.
+
+![Default phoneme table](source/phoneme_table_en.json)
+
 
 ### Description of the Phoneme table
 

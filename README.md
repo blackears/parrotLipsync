@@ -1,12 +1,12 @@
 # Parrot Automatic Lipsync for Blender
 
-This is an addon for Blender that lets you automically generate lipsync data from audio tracks.  It uses the Whisper AI library to turn audio into words, and then Espeak to turn words into phonemes.
+This is an addon for Blender that lets you automatically generate lip-synced data from audio tracks.  It can be used for both 2D and 3D animations and supports many common languages.  It uses OpenAI's Whisper library to turn spoken audio tracks into words, and then Gruut to turn words into phonemes to create the key frames for your mouth positions.
 
 [![Video - overview](https://img.youtube.com/vi/VCXyHdBmBwQ/0.jpg)](https://www.youtube.com/watch?v=VCXyHdBmBwQ)
 
 ## Installation
 
-Parrot Lipsync relies on you having some other applicatiions already installed on your computer.
+Parrot Lipsync relies on you having some other applications already installed on your computer.
 
 ### Install Ffmpeg
 

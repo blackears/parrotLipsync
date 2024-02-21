@@ -30,12 +30,18 @@ Unzip it and add the path of its `/bin` directory to your system's PATH environm
 
 #### Mac Installation
 
-You can install and update ffmpeg using Homebrew
+You can install and update ffmpeg using Homebrew:
 
 ```
 brew update
 brew upgrade
 brew install ffmpeg
+```
+
+#### Linux Installation
+
+```
+sudo apt install ffmpeg
 ```
 
 ### Install Whisper and Gruut
@@ -49,6 +55,15 @@ Open a terminal window and go into your Blender installation's python directory 
 ./python.exe -m pip install --upgrade whisper_timestamped
 ./python.exe -m pip install --upgrade gruut
 ```
+
+For MacOS and Linux, the following should work:
+
+```
+./python -m pip install --upgrade numpy
+./python -m pip install --upgrade whisper_timestamped
+./python -m pip install --upgrade gruut
+```
+
 
 ### Installing the ParrotLipsync addon
 

@@ -67,7 +67,7 @@ For MacOS and Linux, the following should work:
 
 ### Installing the ParrotLipsync addon
 
-You can install the addon by 
+You can install the addon by:
 * opening Blender's `Edit/Preferences` menu
 * opening the Addons section
 * clicking the Install button 

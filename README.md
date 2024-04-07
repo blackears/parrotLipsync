@@ -73,7 +73,17 @@ Once installed, make sure that you check the box to enable it.  A new tab will a
 
 A script has been included in `/examples/headless_example/run_headless.py` that demonstrates running Parrot from the command line without having to launch Blender first.  
 
+Run blender headless from the command line with the following command:
+
 ```
+blender -b headless_demo.blend -P run_headless.py
+```
+
+run_headless.py:
+
+```
+import bpy
+
 # Set Parrot operator properties
 bpy.context.scene.props.target_object = bpy.data.objects['rig']
 

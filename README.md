@@ -20,29 +20,23 @@ ffmpeg -version
 
 If ffmpeg has not been found, you will need to install it.
 
-#### Windows Installation
-
-Download the latest binary from
-
-https://github.com/BtbN/FFmpeg-Builds/releases
-
-Unzip it and add the path of its `/bin` directory to your system's PATH environment variable.
-
-#### Mac Installation
-
-You can install and update ffmpeg using Homebrew:
-
 ```
-brew update
-brew upgrade
+# on Ubuntu or Debian
+sudo apt update && sudo apt install ffmpeg
+
+# on Arch Linux
+sudo pacman -S ffmpeg
+
+# on MacOS using Homebrew (https://brew.sh/)
 brew install ffmpeg
+
+# on Windows using Chocolatey (https://chocolatey.org/)
+choco install ffmpeg
+
+# on Windows using Scoop (https://scoop.sh/)
+scoop install ffmpeg
 ```
 
-#### Linux Installation
-
-```
-sudo apt install ffmpeg
-```
 
 ### Install Whisper and Gruut
 
@@ -74,6 +68,21 @@ You can install the addon by:
 * browsing to the `parrot_lipsync.zip` file
 
 Once installed, make sure that you check the box to enable it.  A new tab will appear in the viewport right hand tab menu.
+
+## Running in headless mode
+
+A script has been included in `/examples/headless_example/run_headless.py` that demonstrates running Parrot from the command line without having to launch Blender first.  
+
+```
+# Set Parrot operator properties
+bpy.context.scene.props.target_object = bpy.data.objects['rig']
+
+# Generate the lipsync
+bpy.ops.parrot.render_lipsync_to_object_nla()
+
+# Save the result
+bpy.ops.wm.save_as_mainfile(filepath="//headless_result.blend")
+```
 
 ## Editing the Phoneme Table
 

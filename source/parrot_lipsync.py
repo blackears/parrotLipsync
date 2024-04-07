@@ -38,6 +38,7 @@ import sys
 import os
 import bpy
 import hashlib
+import importlib
 
 # import whisper_timestamped as whisper
 
@@ -212,7 +213,7 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
 
 class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
     bl_label = "Parrot Lipsync"
-    bl_idname = "PLUGIN_PT_parrot_lipsync"
+    bl_idname = "PLUGIN_PT_lipsync"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "Parrot Lipsync"
@@ -242,20 +243,20 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 
         box_single = main_column.box()
         box_single.prop(props, "lipsync_action")
-        box_single.operator("plugin.parrot_lipsync_to_action")
+        box_single.operator("parrot.lipsync_to_action")
 
         box_create_tracks = main_column.box()
         box_create_tracks.prop(props, "target_object")
         box_create_tracks.prop(props, "rig_action_suffix")
-        box_create_tracks.operator("plugin.parrot_render_lipsync_to_object_nla")
+        box_create_tracks.operator("parrot.render_lipsync_to_object_nla")
         
-        main_column.operator("plugin.parrot_reload_phoneme_table")
+        main_column.operator("parrot.reload_phoneme_table")
 
 
 class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
     bl_label = "Phoneme Groups"
-    bl_idname = "PLUGIN_PT_parrot_lipsync_phoneme_groups"
-    bl_parent_id = "PLUGIN_PT_parrot_lipsync"
+    bl_idname = "PLUGIN_PT_lipsync_phoneme_groups"
+    bl_parent_id = "PLUGIN_PT_lipsync"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_options = {"DEFAULT_CLOSED"}
@@ -292,8 +293,8 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
             
 class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
     bl_label = "Setup"
-    bl_idname = "PLUGIN_PT_parrot_lipsync_setup"
-    bl_parent_id = "PLUGIN_PT_parrot_lipsync"
+    bl_idname = "PLUGIN_PT_lipsync_setup"
+    bl_parent_id = "PLUGIN_PT_lipsync"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_options = {"DEFAULT_CLOSED"}
@@ -304,8 +305,8 @@ class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
 
         main_column = layout.column()
         
-        main_column.operator("plugin.parrot_install_whisper")
-        main_column.operator("plugin.parrot_install_gruut")
+        main_column.operator("parrot.install_whisper")
+        main_column.operator("parrot.install_gruut")
 
 
 # valid_espeak_codes = ['af', 'am', 'an', 'as', 'az', 'ba', 'be', 'bg', 'bn', 'bpy', 'bs', 'ca', 'chr-US-Qaaa-x-west', 'cmn', 'cmn-latn-pinyin', 'cv', 'cy', 'da', 'de', 'en-us', 'en-029', 'en-gb', 'en-gb-scotland', 'en-gb-x-gbclan', 'en-gb-x-gbcwmd', 'en-gb-x-rp', 'en-us-nyc', 'eo', 'es', 'es-419', 'et', 'eu', 'fa', 'fa-latn', 'fi', 'fr-fr', 'fr-be', 'fr-ch', 'ga', 'gd', 'gn', 'grc', 'gu', 'hak', 'haw', 'he', 'hr', 'ht', 'hu', 'hy', 'hyw', 'ia', 'id', 'io', 'is', 'it', 'jbo', 'ka', 'kk', 'kl', 'kn', 'ko', 'kok', 'ku', 'ky', 'la', 'lb', 'lfn', 'lt', 'ltg', 'lv', 'mi', 'mk', 'ml', 'mr', 'mt', 'my', 'nb', 'nci', 'ne', 'nl', 'nog', 'om', 'or', 'pa', 'pap', 'piqd', 'pl', 'pt', 'pt-br', 'py', 'qdb', 'qu', 'quc', 'qya', 'ro', 'ru', 'ru-lv', 'sd', 'shn', 'si', 'sjn', 'sk', 'sl', 'smj', 'sq', 'sr', 'sv', 'sw', 'ta', 'te', 'th', 'tk', 'tn', 'tr', 'tt', 'ug', 'uk', 'ur', 'uz', 'vi', 'vi-vn-x-central', 'vi-vn-x-south', 'yue']
@@ -388,7 +389,7 @@ def get_phonemes_from_file(context, path):
             word_list.append(word["text"])
             word_list_info.append(word)
             
-            #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
+ #           print("word %s %f %f" % (word["text"], word["start"], word["end"]))
             #word["text"]
             #word["start"]
             #word["end"]
@@ -396,7 +397,8 @@ def get_phonemes_from_file(context, path):
     phoneme_word_list = []
     for word in word_list:
         
-        for sent in sentences(word, lang="en-us"):
+#        for sent in sentences(word, lang="en-us"):
+        for sent in sentences(word, lang=final_language_code):
             phoneme_word_list.append(sent[0].phonemes)
 
     word_list_info_cache[md5_hash] = word_list_info
@@ -578,9 +580,14 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
     Parrot Lipsync To Nla
     """
     bl_label = "Render Lipsync to Object NLA"
-    bl_idname = "plugin.parrot_render_lipsync_to_object_nla"
+    bl_idname = "parrot.render_lipsync_to_object_nla"
     
     def execute(self, context):
+        for mod in ['whisper_timestamped', 'gruut']:
+            if not importlib.util.find_spec(mod):
+                self.report({"ERROR"}, mod + " not installed")
+                return {'CANCELLED'}
+            
 
         props = context.scene.props
         
@@ -644,9 +651,14 @@ class PLUGIN_OT_ParrotRenderLipsyncToAction(bpy.types.Operator):
     Parrot Lipsync To Action
     """
     bl_label = "Render Lipsync to Action"
-    bl_idname = "plugin.parrot_lipsync_to_action"
+    bl_idname = "parrot.lipsync_to_action"
     
     def execute(self, context):
+        for mod in ['whisper_timestamped', 'gruut']:
+            if not importlib.util.find_spec(mod):
+                self.report({"ERROR"}, mod + " not installed")
+                return {'CANCELLED'}
+            
     
         props = context.scene.props
         
@@ -689,7 +701,7 @@ class PLUGIN_OT_ParrotReloadPhonemeTable(bpy.types.Operator):
     Install Whisper
     """
     bl_label = "Reload Phoneme Table"
-    bl_idname = "plugin.parrot_reload_phoneme_table"
+    bl_idname = "parrot.reload_phoneme_table"
     
     def execute(self, context):
         update_phoneme_group_pose_list(context)
@@ -702,7 +714,7 @@ class PLUGIN_OT_ParrotInstallWhisper(bpy.types.Operator):
     Install Whisper
     """
     bl_label = "Install/Update Whisper"
-    bl_idname = "plugin.parrot_install_whisper"
+    bl_idname = "parrot.install_whisper"
     
     def execute(self, context):
         python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
@@ -723,7 +735,7 @@ class PLUGIN_OT_ParrotInstallGruut(bpy.types.Operator):
     Install Gruut
     """
     bl_label = "Install/Update Gruut"
-    bl_idname = "plugin.parrot_install_gruut"
+    bl_idname = "parrot.install_gruut"
     
     def execute(self, context):
         python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')

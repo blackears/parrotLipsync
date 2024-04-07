@@ -8,3 +8,5 @@
 /examples/*.blend1
 /examples/basic_3d_rig/*.blend1
 /examples/autorig_pro_3d_example/*.blend1
+/examples/headless_example/*.blend1
+/examples/headless_example/headless_result.blend

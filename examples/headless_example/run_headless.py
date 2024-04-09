@@ -1,5 +1,7 @@
-# To run from command line:
+# To run Blender in headless mode from the command line:
 #   blender -b headless_demo.blend -P run_headless.py
+#
+# (If running on Windows, run in Windows Terminal.  PowerShell does not work.)
 
 import bpy
 

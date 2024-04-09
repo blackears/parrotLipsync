@@ -584,7 +584,8 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
     
     def execute(self, context):
         for mod in ['whisper_timestamped', 'gruut']:
-            if not importlib.util.find_spec(mod):
+            if not importlib.machinery.PathFinder().find_spec(mod):
+            #if not importlib.util.find_spec(mod):
                 self.report({"ERROR"}, mod + " not installed")
                 return {'CANCELLED'}
             

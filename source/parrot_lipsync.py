@@ -646,7 +646,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
         #     pass
         #frame = int(phone_timing["time"] * context.scene.render.fps)
         marker.frame = phone_timing["frame"]
-        print("phoneme ", phone_timing)
+        #print("phoneme ", phone_timing)
         #print("src_action.name " + src_action.name)
         
         #Ensure groups are present

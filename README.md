@@ -80,7 +80,7 @@ Once installed, make sure that you check the box to enable it.  A new tab will a
 
 Once installed, click on the Parrot Lipsync panel to access Parrot's controls.
 
-[Parrot running in Blender 4.1](doc/parrot_in_blender.jpg)
+![Parrot running in Blender 4.1](doc/parrot_in_blender.jpg)
 
 You can then configure various parameters:
 

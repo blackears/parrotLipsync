@@ -541,19 +541,19 @@ def render_lipsync_to_action(context, tgt_action, seq):
         #print("pw_word", pw_word)
         
         word_start_time = word["start"]
-        word_time_end = word["end"]
+        word_end_time = word["end"]
 
         #Adjust start frame to skip silence
         word_start_frame = int(word_start_time * fps)
-        word_end_frame = int(word_time_end * fps)
+        word_end_frame = int(word_end_time * fps)
         while sound_profile[word_start_frame] < silence_cutoff and word_start_frame < word_end_frame:
             word_start_frame += 1
             word_start_time = word_start_frame / float(fps)
         
 
-        word_time_span = word_time_end - word_start_time
+        word_time_span = word_end_time - word_start_time
 
-        if word_time_end < seq_time_start or word_start_time > seq_time_end:
+        if word_end_time < seq_time_start or word_start_time > seq_time_end:
             #print("skip")
             continue
         
@@ -620,7 +620,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
     #Add final rest after final word
     if len(word_list_info) > 0:
         end_time = word_list_info[-1]["end"]
-        phoneme_timings.append({"group": "rest", "frame": int(end_time * fps) + word_pad_frames})
+        phoneme_timings.append({"group": "rest", "frame": int(end_time * fps)})
 
     # if final_word and phoneme_timings[-1]["group"] != "rest":
     #     word_end_frame = int(final_word["end"] * fps) + word_pad_frames 

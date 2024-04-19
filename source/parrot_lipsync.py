@@ -39,6 +39,7 @@ import os
 import bpy
 import hashlib
 import importlib
+import itertools
 
 # import whisper_timestamped as whisper
 
@@ -206,7 +207,12 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         name="Action Name Suffix",
         default='_parrot',
     )
-    
+    attenuation: bpy.props.FloatProperty(
+        name="Strength multiplier for all mouth poses",
+        default=1,
+        min=0,
+        soft_max=1
+    ) 
 
 #------------------------------------------
 # Panel
@@ -229,6 +235,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         main_column.prop(props, "whisper_library_model")
         main_column.prop(props, "phoneme_table_path")
         main_column.prop(props, "key_interpolation")
+        main_column.prop(props, "attenuation")
 
         main_column.prop(props, "autodetect_language")        
         row = main_column.row()
@@ -424,6 +431,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
     target_object = props.target_object
     rest_cooldown_time = props.rest_cooldown_time
     key_interpolation = props.key_interpolation
+    attenuation = props.attenuation
 
     path = bpy.path.abspath(seq.sound.filepath)
     #print("Processing audio file ", path)
@@ -535,27 +543,65 @@ def render_lipsync_to_action(context, tgt_action, seq):
         #print("src_action.name " + src_action.name)
         
         
-        group_map = {}
+        #group_map = {}
         
         for src_group in src_action.groups:
             if not src_group.name in tgt_action.groups:
                 tgt_group = tgt_action.groups.new(src_group.name)
-            else:
-                tgt_group = tgt_action.groups[src_group.name]
+            # else:
+            #     tgt_group = tgt_action.groups[src_group.name]
             
-            group_map[src_group.name] = tgt_group
+            # group_map[src_group.name] = tgt_group
         
+        ######
+        # Attenuation interp
+        # grouped_fcurves = [[k, list(g)] for k, g in itertools.groupby(src_action.fcurves, lambda fc: fc.data_path.rsplit(".", 1)[1])]
+        # for fcurve_group in grouped_fcurves:
+        #     match fcurve_group[0]:
+        #         case 'location':
+        #             src_curve_x = grouped_fcurves[1][0]
+        #             src_curve_y = grouped_fcurves[1][1]
+        #             src_curve_z = grouped_fcurves[1][2]
+
+        #             tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
+        #             # tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index,\
+        #             #                                     group_map[src_curve.group.name] if src_curve.group.name in group_map else None)
+
+        #             # tgt_curve = tgt_action.fcurves.find(src_curve_x.data_path, index = src_curve_x.array_index)
+        #             # if not tgt_curve:
+        #             #     tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+        #             #     if src_curve.group:
+        #             #         tgt_curve.group = group_map[src_curve.group.name]
+        #             pass
+        #         case 'rotation_euler':
+        #             pass
+        #         case 'rotation_quaternion':
+        #             pass
+        #         case 'scale':
+        #             pass
+        #         case _:
+        #             pass
+
+
+        #########
+
         for src_curve in src_action.fcurves:
             #print("src_curve.data_path ", src_curve.data_path, src_curve.array_index)
             
             if src_curve.is_empty:
                 continue
 
+            #local_dpath, prop_name = src_curve.data_path.rsplit(".", 1)
+            #attenuation
+            #data_path: 'location', 'rotation_quaternion'
+
+
             tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
             if not tgt_curve:
                 tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
                 if src_curve.group:
-                    tgt_curve.group = group_map[src_curve.group.name]
+                    tgt_curve.group = tgt_action.groups[src_curve.group.name]
+#                    tgt_curve.group = group_map[src_curve.group.name]
             
             #start_co = curve.keyframe_points[0]
             range = src_action.curve_frame_range
@@ -578,6 +624,14 @@ def render_lipsync_to_action(context, tgt_action, seq):
                 tgt_kf.period = src_kf.period
 
 
+def get_or_create_fcurve(tgt_action, data_path, array_index, group_name):
+    tgt_curve = tgt_action.fcurves.find(data_path, index = array_index)
+    if not tgt_curve:
+        tgt_curve = tgt_action.fcurves.new(data_path, index = array_index)
+        if group_name in tgt_action.groups:
+            tgt_curve.group = tgt_action.groups[group_name]
+
+    return tgt_curve
 
 #------------------------------------------
 # Lipsync to rig NLA

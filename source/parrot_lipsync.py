@@ -41,6 +41,7 @@ import hashlib
 import importlib
 import itertools
 import mathutils
+import numpy as np
 
 # import whisper_timestamped as whisper
 
@@ -338,6 +339,7 @@ class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
 
 phoneme_cache = {}
 word_list_info_cache = {}
+sound_profile_cache = {}
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -347,9 +349,20 @@ def md5(fname):
             
     return hash_md5.hexdigest()
 
+
+def max_values_in_partitions(arr, n):
+    # Calculate the length of each partition
+    partition_length = len(arr) // n
+    
+    # Reshape the input array into a 2D array with 'n' rows and 'partition_length' columns
+    partitions = np.reshape(arr[:n * partition_length], (n, partition_length))
+    
+    # Calculate the maximum value along each row (axis=1) and return the result
+    return np.max(partitions, axis=1)
+
 use_cached_dialog = True
 
-def get_phonemes_from_file(context, path):
+def get_phonemes_from_file(context, seq):
     #Putting imports here to avoid these libraries slowing down Blender loading addons
     import whisper_timestamped as whisper
 
@@ -361,15 +374,21 @@ def get_phonemes_from_file(context, path):
     autodetect_language = props.autodetect_language
     language_code = props.language_code
 
+    path = bpy.path.abspath(seq.sound.filepath)
+
     md5_hash = md5(path)
     if use_cached_dialog and md5_hash in phoneme_cache:
-        return (word_list_info_cache[md5_hash], phoneme_cache[md5_hash])
+        return (word_list_info_cache[md5_hash], phoneme_cache[md5_hash], sound_profile_cache[md5_hash])
     
     model = whisper.load_model(whisper_library_model)
 
     audio = whisper.load_audio(path)
     audio_shaped = whisper.pad_or_trim(audio)
     
+    #Find audio volume per frame
+    volume_per_frame = max_values_in_partitions(np.array(audio), seq.frame_duration)
+    
+
     final_language_code = language_code
     
     if autodetect_language:
@@ -389,9 +408,6 @@ def get_phonemes_from_file(context, path):
 #    print("Audio source: ", path)
     print("Text: ", whisper_result["text"])
 
-    #TODO: Need to figure out how to choose proper language library
-#            espeak_backend = EspeakBackend(final_language_code)
-    
     word_list = []
     word_list_info = []
     for seg in whisper_result["segments"]:
@@ -418,8 +434,9 @@ def get_phonemes_from_file(context, path):
 
     word_list_info_cache[md5_hash] = word_list_info
     phoneme_cache[md5_hash] = phoneme_word_list
+    sound_profile_cache[md5_hash] = volume_per_frame
     
-    return (word_list_info, phoneme_word_list)
+    return (word_list_info, phoneme_word_list, volume_per_frame)
 
 
 def set_target_keyframe(tgt_curve, frame, value, interp_type):
@@ -465,12 +482,12 @@ def render_lipsync_to_action(context, tgt_action, seq):
     key_interpolation = props.key_interpolation
     attenuation = props.attenuation
 
-    path = bpy.path.abspath(seq.sound.filepath)
+    #path = bpy.path.abspath(seq.sound.filepath)
     #print("Processing audio file ", path)
     #print("Parsing track: ", seq.name)        
     
     phoneme_timings = []
-    word_list_info, phoneme_word_list = get_phonemes_from_file(context, path)
+    word_list_info, phoneme_word_list, sound_profile = get_phonemes_from_file(context, seq)
 
     update_phoneme_group_pose_list(context)
     

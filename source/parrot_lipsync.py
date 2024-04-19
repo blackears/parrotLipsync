@@ -40,6 +40,7 @@ import bpy
 import hashlib
 import importlib
 import itertools
+import mathutils
 
 # import whisper_timestamped as whisper
 
@@ -420,6 +421,37 @@ def get_phonemes_from_file(context, path):
     
     return (word_list_info, phoneme_word_list)
 
+
+def set_target_keyframe(tgt_curve, frame, value, interp_type):
+    tgt_kf = tgt_curve.keyframe_points.insert(frame = frame, value = value)
+
+    match interp_type:
+        case "constant":
+            tgt_kf.interpolation = 'CONSTANT'
+        case "linear":
+            tgt_kf.interpolation = 'LINEAR'
+        case _:
+        #case "bezier":
+            tgt_kf.interpolation = 'BEZIER'
+        # case _:
+        #     tgt_kf.interpolation = src_kf.interpolation
+        
+    # tgt_kf.easing = src_kf.easing
+    # tgt_kf.handle_left = src_kf.handle_left
+    # tgt_kf.handle_right = src_kf.handle_right
+    # tgt_kf.period = src_kf.period
+
+    return tgt_kf
+
+def get_or_create_fcurve(tgt_action, data_path, array_index, group_name):
+    tgt_curve = tgt_action.fcurves.find(data_path, index = array_index)
+    if not tgt_curve:
+        tgt_curve = tgt_action.fcurves.new(data_path, index = array_index)
+        if group_name in tgt_action.groups:
+            tgt_curve.group = tgt_action.groups[group_name]
+
+    return tgt_curve
+
 def render_lipsync_to_action(context, tgt_action, seq):
 
     props = context.scene.props
@@ -526,10 +558,10 @@ def render_lipsync_to_action(context, tgt_action, seq):
                 
     #print("phoneme_timings ", phoneme_timings)
     
-    for idx, p_timing in enumerate(phoneme_timings):
+    for idx, phone_timing in enumerate(phoneme_timings):
         #print(p_timing)
                         
-        group_name = p_timing["group"]
+        group_name = phone_timing["group"]
         #print("group_name " , group_name)
         if not group_name in group_pose_hash:
             continue
@@ -539,7 +571,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
             continue
             
         marker = tgt_action.pose_markers.new(group_name)
-        marker.frame = int(p_timing["time"] * context.scene.render.fps)
+        marker.frame = int(phone_timing["time"] * context.scene.render.fps)
         #print("src_action.name " + src_action.name)
         
         
@@ -554,84 +586,210 @@ def render_lipsync_to_action(context, tgt_action, seq):
             # group_map[src_group.name] = tgt_group
         
         ######
-        # Attenuation interp
-        # grouped_fcurves = [[k, list(g)] for k, g in itertools.groupby(src_action.fcurves, lambda fc: fc.data_path.rsplit(".", 1)[1])]
-        # for fcurve_group in grouped_fcurves:
-        #     match fcurve_group[0]:
-        #         case 'location':
-        #             src_curve_x = grouped_fcurves[1][0]
-        #             src_curve_y = grouped_fcurves[1][1]
-        #             src_curve_z = grouped_fcurves[1][2]
+        #Attenuation interp
+        grouped_fcurves = [[k, list(g)] for k, g in itertools.groupby(src_action.fcurves, lambda fc: fc.data_path.rsplit(".", 1)[1])]
+        for fcurve_group in grouped_fcurves:
+            match fcurve_group[0]:
+                case 'location':
+                    src_curve_x = fcurve_group[1][0]
+                    src_curve_y = fcurve_group[1][1]
+                    src_curve_z = fcurve_group[1][2]
 
-        #             tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
-        #             # tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index,\
-        #             #                                     group_map[src_curve.group.name] if src_curve.group.name in group_map else None)
+                    tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
+                    tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
+                    tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
 
-        #             # tgt_curve = tgt_action.fcurves.find(src_curve_x.data_path, index = src_curve_x.array_index)
-        #             # if not tgt_curve:
-        #             #     tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
-        #             #     if src_curve.group:
-        #             #         tgt_curve.group = group_map[src_curve.group.name]
-        #             pass
-        #         case 'rotation_euler':
-        #             pass
-        #         case 'rotation_quaternion':
-        #             pass
-        #         case 'scale':
-        #             pass
-        #         case _:
-        #             pass
+                    range = src_action.curve_frame_range
+                    #print("range ", range)
+
+                    #src_frames = list(set(src_curve_x.keyframe_points + src_curve_y.keyframe_points + src_curve_z.keyframe_points)).sort()
+                    src_frames = sorted(list(set([k.co[0] for k in src_curve_x.keyframe_points] \
+                                         + [k.co[0] for k in src_curve_y.keyframe_points] \
+                                         + [k.co[0] for k in src_curve_z.keyframe_points])))
+
+#                    for src_kf in src_curve_x.keyframe_points:
+                    for frame in src_frames:
+                        x = src_curve_x.evaluate(frame)
+                        y = src_curve_y.evaluate(frame)
+                        z = src_curve_z.evaluate(frame)
+
+                        src_vec = mathutils.Vector([x, y, z]) * attenuation
+#                        value = src_kf.co[1]
+                        
+                        set_target_keyframe(tgt_curve_x, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        src_vec.x, \
+                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_y, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        src_vec.y, \
+                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_z, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        src_vec.z, \
+                                        key_interpolation)
+
+
+
+                    # tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index,\
+                    #                                     group_map[src_curve.group.name] if src_curve.group.name in group_map else None)
+
+                    # tgt_curve = tgt_action.fcurves.find(src_curve_x.data_path, index = src_curve_x.array_index)
+                    # if not tgt_curve:
+                    #     tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+                    #     if src_curve.group:
+                    #         tgt_curve.group = group_map[src_curve.group.name]
+                    pass
+                case 'rotation_euler':
+                    src_curve_x = fcurve_group[1][0]
+                    src_curve_y = fcurve_group[1][1]
+                    src_curve_z = fcurve_group[1][2]
+
+                    tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
+                    tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
+                    tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+
+                    range = src_action.curve_frame_range
+                    #print("range ", range)
+
+                    #src_frames = list(set(src_curve_x.keyframe_points + src_curve_y.keyframe_points + src_curve_z.keyframe_points)).sort()
+                    src_frames = sorted(list(set([k.co[0] for k in src_curve_x.keyframe_points] \
+                                         + [k.co[0] for k in src_curve_y.keyframe_points] \
+                                         + [k.co[0] for k in src_curve_z.keyframe_points])))
+
+#                    for src_kf in src_curve_x.keyframe_points:
+                    for frame in src_frames:
+                        x = src_curve_x.evaluate(frame)
+                        y = src_curve_y.evaluate(frame)
+                        z = src_curve_z.evaluate(frame)
+
+                        src_vec = mathutils.Euler([x * attenuation, y * attenuation, z * attenuation])
+#                        value = src_kf.co[1]
+                        
+                        set_target_keyframe(tgt_curve_x, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        src_vec.x, \
+                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_y, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        src_vec.y, \
+                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_z, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        src_vec.z, \
+                                        key_interpolation)
+
+                case 'rotation_quaternion':
+                    src_curve_w = fcurve_group[1][0]
+                    src_curve_x = fcurve_group[1][1]
+                    src_curve_y = fcurve_group[1][2]
+                    src_curve_z = fcurve_group[1][3]
+
+                    tgt_curve_w = get_or_create_fcurve(tgt_action, src_curve_w.data_path, src_curve_w.array_index, src_curve_w.group.name)
+                    tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
+                    tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
+                    tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+
+                    range = src_action.curve_frame_range
+                    #print("range ", range)
+
+                    #src_frames = list(set(src_curve_x.keyframe_points + src_curve_y.keyframe_points + src_curve_z.keyframe_points)).sort()
+                    src_frames = sorted(list(set([k.co[0] for k in src_curve_w.keyframe_points] \
+                                         + [k.co[0] for k in src_curve_x.keyframe_points] \
+                                         + [k.co[0] for k in src_curve_y.keyframe_points] \
+                                         + [k.co[0] for k in src_curve_z.keyframe_points])))
+
+#                    for src_kf in src_curve_x.keyframe_points:
+                    for frame in src_frames:
+                        w = src_curve_w.evaluate(frame)
+                        x = src_curve_x.evaluate(frame)
+                        y = src_curve_y.evaluate(frame)
+                        z = src_curve_z.evaluate(frame)
+
+                        identity_quat = mathutils.Quaternion()
+                        src_quat = mathutils.Quaternion([w, x, y, z])
+                        eval_quat = identity_quat.slerp(src_quat, attenuation)
+#                        value = src_kf.co[1]
+                        
+                        set_target_keyframe(tgt_curve_w, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        eval_quat.w, \
+                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_x, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        eval_quat.x, \
+                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_y, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        eval_quat.y, \
+                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_z, \
+                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                        eval_quat.z, \
+                                        key_interpolation)
+                case _:
+                    for src_curve in fcurve_group[1]:
+
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
+                        range = src_action.curve_frame_range
+                        #print("range ", range)
+
+                        src_frames = [k.co[0] for k in src_curve.keyframe_points]
+
+    #                    for src_kf in src_curve_x.keyframe_points:
+                        for frame in src_frames:
+                            value = src_curve.evaluate(frame)
+
+                            src_vec = value
+    #                        value = src_kf.co[1]
+                            
+                            set_target_keyframe(tgt_curve, \
+                                            frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
+                                            value, \
+                                            key_interpolation)
 
 
         #########
 
-        for src_curve in src_action.fcurves:
-            #print("src_curve.data_path ", src_curve.data_path, src_curve.array_index)
+#         for src_curve in src_action.fcurves:
+#             #print("src_curve.data_path ", src_curve.data_path, src_curve.array_index)
             
-            if src_curve.is_empty:
-                continue
+#             if src_curve.is_empty:
+#                 continue
 
-            #local_dpath, prop_name = src_curve.data_path.rsplit(".", 1)
-            #attenuation
-            #data_path: 'location', 'rotation_quaternion'
+#             #local_dpath, prop_name = src_curve.data_path.rsplit(".", 1)
+#             #attenuation
+#             #data_path: 'location', 'rotation_quaternion'
 
 
-            tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
-            if not tgt_curve:
-                tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
-                if src_curve.group:
-                    tgt_curve.group = tgt_action.groups[src_curve.group.name]
-#                    tgt_curve.group = group_map[src_curve.group.name]
+#             tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
+#             if not tgt_curve:
+#                 tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+#                 if src_curve.group:
+#                     tgt_curve.group = tgt_action.groups[src_curve.group.name]
+# #                    tgt_curve.group = group_map[src_curve.group.name]
             
-            #start_co = curve.keyframe_points[0]
-            range = src_action.curve_frame_range
-            #print("range ", range)
-            for src_kf in src_curve.keyframe_points:
-                #co = kf.co
-                tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + int(p_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
+#             #start_co = curve.keyframe_points[0]
+#             range = src_action.curve_frame_range
+#             #print("range ", range)
+#             for src_kf in src_curve.keyframe_points:
+#                 #co = kf.co
+#                 tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - range[0] + int(phone_timing["time"] * context.scene.render.fps)), value = src_kf.co[1])
                 
-                tgt_kf.interpolation = src_kf.interpolation
-                if key_interpolation == "constant":
-                    tgt_kf.interpolation = 'CONSTANT'
-                elif key_interpolation == "linear":
-                    tgt_kf.interpolation = 'LINEAR'
-                elif key_interpolation == "bezier":
-                    tgt_kf.interpolation = 'BEZIER'
+#                 tgt_kf.interpolation = src_kf.interpolation
+#                 if key_interpolation == "constant":
+#                     tgt_kf.interpolation = 'CONSTANT'
+#                 elif key_interpolation == "linear":
+#                     tgt_kf.interpolation = 'LINEAR'
+#                 elif key_interpolation == "bezier":
+#                     tgt_kf.interpolation = 'BEZIER'
                     
-                tgt_kf.easing = src_kf.easing
-                tgt_kf.handle_left = src_kf.handle_left
-                tgt_kf.handle_right = src_kf.handle_right
-                tgt_kf.period = src_kf.period
+#                 tgt_kf.easing = src_kf.easing
+#                 tgt_kf.handle_left = src_kf.handle_left
+#                 tgt_kf.handle_right = src_kf.handle_right
+#                 tgt_kf.period = src_kf.period
 
 
-def get_or_create_fcurve(tgt_action, data_path, array_index, group_name):
-    tgt_curve = tgt_action.fcurves.find(data_path, index = array_index)
-    if not tgt_curve:
-        tgt_curve = tgt_action.fcurves.new(data_path, index = array_index)
-        if group_name in tgt_action.groups:
-            tgt_curve.group = tgt_action.groups[group_name]
-
-    return tgt_curve
 
 #------------------------------------------
 # Lipsync to rig NLA

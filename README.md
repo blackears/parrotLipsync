@@ -58,6 +58,13 @@ For MacOS and Linux, the following should work:
 ./python -m pip install --upgrade gruut
 ```
 
+Some languages will require additional packages to be installed:
+
+```
+Russian:
+./python.exe -m pip install --upgrade gruut-lang-ru
+```
+
 
 ### Installing the ParrotLipsync addon
 

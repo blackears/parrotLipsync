@@ -338,7 +338,9 @@ def md5(fname):
             hash_md5.update(chunk)
             
     return hash_md5.hexdigest()
-    
+
+use_cached_dialog = True
+
 def get_phonemes_from_file(context, path):
     #Putting imports here to avoid these libraries slowing down Blender loading addons
     import whisper_timestamped as whisper
@@ -352,7 +354,7 @@ def get_phonemes_from_file(context, path):
     language_code = props.language_code
 
     md5_hash = md5(path)
-    if md5_hash in phoneme_cache:
+    if use_cached_dialog and md5_hash in phoneme_cache:
         return (word_list_info_cache[md5_hash], phoneme_cache[md5_hash])
     
     model = whisper.load_model(whisper_library_model)
@@ -394,12 +396,17 @@ def get_phonemes_from_file(context, path):
             #word["start"]
             #word["end"]
     
+    
     phoneme_word_list = []
-    for word in word_list:
-        
-#        for sent in sentences(word, lang="en-us"):
-        for sent in sentences(word, lang=final_language_code):
-            phoneme_word_list.append(sent[0].phonemes)
+    for word_src in word_list:
+        for sent in sentences(word_src, lang=final_language_code):
+            phonemes = []
+            for word in sent:
+                if word.phonemes:
+                    phonemes += word.phonemes
+
+            phoneme_word_list.append(phonemes)
+
 
     word_list_info_cache[md5_hash] = word_list_info
     phoneme_cache[md5_hash] = phoneme_word_list

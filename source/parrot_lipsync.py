@@ -201,19 +201,26 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description = "Action lipsync data will be written to.",
         type=bpy.types.Action
     )
-    rest_cooldown_time: bpy.props.FloatProperty(
-        name="Rest cooldown time",
-        default=.5,
+    word_pad_frames: bpy.props.IntProperty(
+        name="Word pad frames",
+        description="Number of frames surrounding a word to place rests",
+        default=2,
     )
     rig_action_suffix: bpy.props.StringProperty(
         name="Action Name Suffix",
         default='_parrot',
     )
     attenuation: bpy.props.FloatProperty(
-        name="Strength multiplier for all mouth poses",
+        name="Strength multiplier",
+        description="Attenuate all key poses by a constant amount.",
         default=1,
         min=0,
         soft_max=1
+    ) 
+    attenuate_volume: bpy.props.BoolProperty(
+        name="Track volume multiplier",
+        description="Attenuate the strength of the keyframe based on the loudness of the vocal track.",
+        default=False,
     ) 
 
 #------------------------------------------
@@ -237,7 +244,9 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         main_column.prop(props, "whisper_library_model")
         main_column.prop(props, "phoneme_table_path")
         main_column.prop(props, "key_interpolation")
+        main_column.prop(props, "word_pad_frames")
         main_column.prop(props, "attenuation")
+        main_column.prop(props, "attenuate_volume")
 
         main_column.prop(props, "autodetect_language")        
         row = main_column.row()
@@ -386,7 +395,8 @@ def get_phonemes_from_file(context, seq):
     audio_shaped = whisper.pad_or_trim(audio)
     
     #Find audio volume per frame
-    volume_per_frame = max_values_in_partitions(np.array(audio), seq.frame_duration)
+    audio_data = np.array(audio) * seq.volume
+    volume_per_frame = max_values_in_partitions(audio_data, seq.frame_duration)
     
 
     final_language_code = language_code
@@ -477,10 +487,13 @@ def render_lipsync_to_action(context, tgt_action, seq):
     #whisper_library_model = props.whisper_library_model
     #autodetect_language = props.autodetect_language
     #language_code = props.language_code
-    target_object = props.target_object
-    rest_cooldown_time = props.rest_cooldown_time
+    #target_object = props.target_object
     key_interpolation = props.key_interpolation
     attenuation = props.attenuation
+    attenuate_volume = props.attenuate_volume
+    word_pad_frames = props.word_pad_frames
+
+    fps = context.scene.render.fps
 
     #path = bpy.path.abspath(seq.sound.filepath)
     #print("Processing audio file ", path)
@@ -507,32 +520,53 @@ def render_lipsync_to_action(context, tgt_action, seq):
     for pose_props in props.phoneme_poses:
         group_pose_hash[pose_props.group] = pose_props.pose
 
-    seq_time_start = seq.frame_offset_start / context.scene.render.fps
-    seq_time_end = (seq.frame_offset_start + seq.frame_final_duration) / context.scene.render.fps
+    seq_time_start = seq.frame_offset_start / fps
+    seq_time_end = (seq.frame_offset_start + seq.frame_final_duration) / fps
 
-    print("seq_time_start ", seq_time_start, " seq_time_end ", seq_time_end)
-    final_word = None
+    #print("seq_time_start ", seq_time_start, " seq_time_end ", seq_time_end)
+    #final_word = None
     
     for pw_idx, pw_word in enumerate(phoneme_word_list):
         word = word_list_info[pw_idx]
-        print("word ", word)
-        print("pw_word", pw_word)
+        #print("word ", word)
+        #print("pw_word", pw_word)
         
-        word_time_start = word["start"]
+        word_start_time = word["start"]
         word_time_end = word["end"]
-        word_time_span = word_time_end - word_time_start
 
-        if word_time_end < seq_time_start or word_time_start > seq_time_end:
+        #Adjust start frame to skip silence
+        word_start_frame = int(word_start_time * fps)
+        word_end_frame = int(word_time_end * fps)
+        while sound_profile[word_start_frame] < .05 and word_start_frame < word_end_frame:
+            word_start_frame += 1
+            word_start_time = word_start_frame / float(fps)
+        
+
+        word_time_span = word_time_end - word_start_time
+
+        if word_time_end < seq_time_start or word_start_time > seq_time_end:
             #print("skip")
             continue
         
-        final_word = word
+        #final_word = word
         
         phonemes = pw_word
         #phonemes = pw_word.split(' ')
-        num_keys = len(phonemes) + 1
+        #num_keys = len(phonemes)
 
-        phoneme_timings.append({"group": "rest", "time": word_time_start})
+        if pw_idx == 0:
+            phoneme_timings.append({"group": "rest", "frame": int(word_start_time * fps) - word_pad_frames})
+        else:
+            prev_word = word_list_info[pw_idx - 1]
+            prev_word_end_time = prev_word["end"]
+
+            prev_end_frame = int(prev_word_end_time * fps)
+            cur_start_frame = int(word_start_time * fps)
+            if cur_start_frame > prev_end_frame + word_pad_frames * 2:
+                phoneme_timings.append({"group": "rest", "frame": prev_end_frame + word_pad_frames})
+                phoneme_timings.append({"group": "rest", "frame": cur_start_frame - word_pad_frames})
+            elif cur_start_frame > prev_end_frame + 1:
+                phoneme_timings.append({"group": "rest", "frame": int((cur_start_frame + prev_end_frame) / 2)})
         
         for p_idx, ele in enumerate(phonemes):
             ele = ele.replace("ˈ", "")
@@ -551,32 +585,43 @@ def render_lipsync_to_action(context, tgt_action, seq):
             if not src_action:
                 continue
             
-            p_time = word_time_start + word_time_span * (float(p_idx + 1) / num_keys)
+            phone_time = word_start_time + word_time_span * (float(p_idx) / len(phonemes))
             #print("p_time ", p_time, " time_start ", time_start, " time_end ", time_end)
                 
-            phoneme_timings.append({"group": group_name, "time": p_time})
+            phoneme_timings.append({"group": group_name, "time": phone_time, "frame": int(phone_time * fps)})
 #                    phoneme_timings.append([group_name, p_time * context.scene.render.fps])
+
+
+        # if pw_idx < len(word_list_info) - 1:
+        #     next_word_start_time = word_list_info[pw_idx + 1]["start"]
+        #     next_word_start_frame = int(next_word_start_time * fps)
+        #     word_end_frame = int(word_time_end * fps)
+        #     if word_end_frame + word_pad_frames < next_word_start_frame - word_pad_frames:
+        #         phoneme_timings.append({"group": "rest", "time": float(word_end_frame + word_pad_frames) / fps,\
+        #                                 "frame": word_end_frame + word_pad_frames})
+            #if next_word_start_time > word_time_end + rest_cooldown_time:
+                
         
-        if pw_idx < len(word_list_info) - 1:
-            next_word_start_time = word_list_info[pw_idx + 1]["start"]
-            if next_word_start_time - word_time_end > rest_cooldown_time:
-        
-                phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
+                #phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time, "frame": })
     
     if len(phoneme_timings) == 0:
         #No phonemes - skip
         return
 
     #Add final rest after final word
-    if final_word and phoneme_timings[-1]["group"] != "rest":
-        word_time_end = final_word["end"]
-        phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time})
+    if len(word_list_info) > 0:
+        end_time = word_list_info[-1]["end"]
+        phoneme_timings.append({"group": "rest", "frame": int(end_time * fps) + word_pad_frames})
+
+    # if final_word and phoneme_timings[-1]["group"] != "rest":
+    #     word_end_frame = int(final_word["end"] * fps) + word_pad_frames 
+    #     phoneme_timings.append({"group": "rest", "time": word_end_frame / float(fps), "frame": word_end_frame})
                 
                 
     #print("phoneme_timings ", phoneme_timings)
     
     for idx, phone_timing in enumerate(phoneme_timings):
-        #print(p_timing)
+        #print(phone_timing)
                         
         group_name = phone_timing["group"]
         #print("group_name " , group_name)
@@ -588,13 +633,17 @@ def render_lipsync_to_action(context, tgt_action, seq):
             continue
             
         marker = tgt_action.pose_markers.new(group_name)
-        marker.frame = int(phone_timing["time"] * context.scene.render.fps)
+        # if phone_timing["time"] > 2:
+        #     pass
+        #frame = int(phone_timing["time"] * context.scene.render.fps)
+        marker.frame = phone_timing["frame"]
+        print("phoneme ", phone_timing)
         #print("src_action.name " + src_action.name)
         
-        
+        #Ensure groups are present
         for src_group in src_action.groups:
             if not src_group.name in tgt_action.groups:
-                tgt_group = tgt_action.groups.new(src_group.name)
+                tgt_action.groups.new(src_group.name)
         
         #Attenuation interp
         grouped_fcurves = [[k, list(g)] for k, g in itertools.groupby(src_action.fcurves, lambda fc: fc.data_path.rsplit(".", 1)[1])]
@@ -621,20 +670,19 @@ def render_lipsync_to_action(context, tgt_action, seq):
                         y = src_curve_y.evaluate(frame)
                         z = src_curve_z.evaluate(frame)
 
-                        src_vec = mathutils.Vector([x, y, z]) * attenuation
+                        tgt_frame = frame - range[0] + phone_timing["frame"]
+
+                        atten = attenuation
+                        if attenuate_volume:
+                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
+                            vol_atten = sound_profile[index]
+                            atten *= vol_atten
+
+                        src_vec = mathutils.Vector([x, y, z]) * atten
                         
-                        set_target_keyframe(tgt_curve_x, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        src_vec.x, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_y, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        src_vec.y, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_z, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        src_vec.z, \
-                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_x, tgt_frame, src_vec.x, key_interpolation)
+                        set_target_keyframe(tgt_curve_y, tgt_frame, src_vec.y, key_interpolation)
+                        set_target_keyframe(tgt_curve_z, tgt_frame, src_vec.z, key_interpolation)
 
                 case 'rotation_euler':
                     src_curve_x = fcurve_group[1][0]
@@ -656,20 +704,19 @@ def render_lipsync_to_action(context, tgt_action, seq):
                         y = src_curve_y.evaluate(frame)
                         z = src_curve_z.evaluate(frame)
 
-                        src_vec = mathutils.Euler([x * attenuation, y * attenuation, z * attenuation])
+                        tgt_frame = frame - range[0] + phone_timing["frame"]
+                        atten = attenuation
+                        if attenuate_volume:
+                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
+                            vol_atten = sound_profile[index]
+                            atten *= vol_atten
+                        atten = min(max(atten, 0), 1)
+
+                        src_vec = mathutils.Euler([x * atten, y * atten, z * atten])
                         
-                        set_target_keyframe(tgt_curve_x, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        src_vec.x, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_y, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        src_vec.y, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_z, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        src_vec.z, \
-                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_x, tgt_frame, src_vec.x, key_interpolation)
+                        set_target_keyframe(tgt_curve_y, tgt_frame, src_vec.y, key_interpolation)
+                        set_target_keyframe(tgt_curve_z, tgt_frame, src_vec.z, key_interpolation)
 
                 case 'rotation_quaternion':
                     src_curve_w = fcurve_group[1][0]
@@ -695,26 +742,22 @@ def render_lipsync_to_action(context, tgt_action, seq):
                         y = src_curve_y.evaluate(frame)
                         z = src_curve_z.evaluate(frame)
 
+                        tgt_frame = frame - range[0] + phone_timing["frame"]
+                        atten = attenuation
+                        if attenuate_volume:
+                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
+                            vol_atten = sound_profile[index]
+                            atten *= vol_atten
+                        atten = min(max(atten, 0), 1)
+
                         identity_quat = mathutils.Quaternion()
                         src_quat = mathutils.Quaternion([w, x, y, z])
-                        eval_quat = identity_quat.slerp(src_quat, attenuation)
+                        eval_quat = identity_quat.slerp(src_quat, atten)
                         
-                        set_target_keyframe(tgt_curve_w, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        eval_quat.w, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_x, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        eval_quat.x, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_y, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        eval_quat.y, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_z, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        eval_quat.z, \
-                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_w, tgt_frame, eval_quat.w, key_interpolation)
+                        set_target_keyframe(tgt_curve_x, tgt_frame, eval_quat.x, key_interpolation)
+                        set_target_keyframe(tgt_curve_y, tgt_frame, eval_quat.y, key_interpolation)
+                        set_target_keyframe(tgt_curve_z, tgt_frame, eval_quat.z, key_interpolation)
                 case 'scale':
                     src_curve_x = fcurve_group[1][0]
                     src_curve_y = fcurve_group[1][1]
@@ -735,22 +778,20 @@ def render_lipsync_to_action(context, tgt_action, seq):
                         y = src_curve_y.evaluate(frame)
                         z = src_curve_z.evaluate(frame)
 
+                        tgt_frame = frame - range[0] + phone_timing["frame"]
+                        atten = attenuation
+                        if attenuate_volume:
+                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
+                            vol_atten = sound_profile[index]
+                            atten *= vol_atten
+
                         identity = mathutils.Vector([1, 1, 1])
                         src_vec = mathutils.Vector([x, y, z])
-                        eval_vec = identity.lerp(src_vec, attenuation)
+                        eval_vec = identity.lerp(src_vec, atten)
                         
-                        set_target_keyframe(tgt_curve_x, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        eval_vec.x, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_y, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        eval_vec.y, \
-                                        key_interpolation)
-                        set_target_keyframe(tgt_curve_z, \
-                                        frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                        eval_vec.z, \
-                                        key_interpolation)
+                        set_target_keyframe(tgt_curve_x, tgt_frame, eval_vec.x, key_interpolation)
+                        set_target_keyframe(tgt_curve_y, tgt_frame, eval_vec.y, key_interpolation)
+                        set_target_keyframe(tgt_curve_z, tgt_frame, eval_vec.z, key_interpolation)
 
                 case _:
                     for src_curve in fcurve_group[1]:
@@ -761,14 +802,13 @@ def render_lipsync_to_action(context, tgt_action, seq):
                         src_frames = [k.co[0] for k in src_curve.keyframe_points]
 
                         for frame in src_frames:
+                            tgt_frame = frame - range[0] + phone_timing["frame"]
+
                             value = src_curve.evaluate(frame)
 
                             src_vec = value
                             
-                            set_target_keyframe(tgt_curve, \
-                                            frame - range[0] + int(phone_timing["time"] * context.scene.render.fps), \
-                                            value, \
-                                            key_interpolation)
+                            set_target_keyframe(tgt_curve, tgt_frame, value, key_interpolation)
 
 
 

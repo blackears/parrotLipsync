@@ -222,6 +222,13 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         description="Attenuate the strength of the keyframe based on the loudness of the vocal track.",
         default=False,
     ) 
+    silence_cutoff: bpy.props.FloatProperty(
+        name="Silence cutoff",
+        description="If a track frame's audio lies below this value, the frame is considered to be silent.  This is used to adjust the start times of words.",
+        default=.05,
+        min=0,
+        max=1,
+    ) 
 
 #------------------------------------------
 # Panel
@@ -244,6 +251,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         main_column.prop(props, "whisper_library_model")
         main_column.prop(props, "phoneme_table_path")
         main_column.prop(props, "key_interpolation")
+        main_column.prop(props, "silence_cutoff")
         main_column.prop(props, "word_pad_frames")
         main_column.prop(props, "attenuation")
         main_column.prop(props, "attenuate_volume")
@@ -492,6 +500,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
     attenuation = props.attenuation
     attenuate_volume = props.attenuate_volume
     word_pad_frames = props.word_pad_frames
+    silence_cutoff = props.silence_cutoff
 
     fps = context.scene.render.fps
 
@@ -537,7 +546,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
         #Adjust start frame to skip silence
         word_start_frame = int(word_start_time * fps)
         word_end_frame = int(word_time_end * fps)
-        while sound_profile[word_start_frame] < .05 and word_start_frame < word_end_frame:
+        while sound_profile[word_start_frame] < silence_cutoff and word_start_frame < word_end_frame:
             word_start_frame += 1
             word_start_time = word_start_frame / float(fps)
         
@@ -562,8 +571,8 @@ def render_lipsync_to_action(context, tgt_action, seq):
 
             prev_end_frame = int(prev_word_end_time * fps)
             cur_start_frame = int(word_start_time * fps)
-            if cur_start_frame > prev_end_frame + word_pad_frames * 2:
-                phoneme_timings.append({"group": "rest", "frame": prev_end_frame + word_pad_frames})
+            if cur_start_frame > prev_end_frame + word_pad_frames:
+                phoneme_timings.append({"group": "rest", "frame": prev_end_frame})
                 phoneme_timings.append({"group": "rest", "frame": cur_start_frame - word_pad_frames})
             elif cur_start_frame > prev_end_frame + 1:
                 phoneme_timings.append({"group": "rest", "frame": int((cur_start_frame + prev_end_frame) / 2)})

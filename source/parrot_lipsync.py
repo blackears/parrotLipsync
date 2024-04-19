@@ -166,9 +166,8 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         name="Key Interpolation",
         items= [('constant', 'constant', 'constant interpolation'),
                ('linear', 'linear', 'linaer interpolation'),
-               ('bezier', 'bezier', 'bezier interpolation'),
-               ('default', 'default', 'use the interpolation type set on the key'),],
-        default='default'
+               ('bezier', 'bezier', 'bezier interpolation'),],
+        default='bezier'
     )
     # override_espeak_language_code: bpy.props.BoolProperty(
         # name="Specify Espeak Language Code",
@@ -205,6 +204,8 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         name="Word pad frames",
         description="Number of frames surrounding a word to place rests",
         default=2,
+        min=1,
+        soft_max=10
     )
     rig_action_suffix: bpy.props.StringProperty(
         name="Action Name Suffix",

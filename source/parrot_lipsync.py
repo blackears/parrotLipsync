@@ -599,21 +599,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
             #print("p_time ", p_time, " time_start ", time_start, " time_end ", time_end)
                 
             phoneme_timings.append({"group": group_name, "time": phone_time, "frame": int(phone_time * fps)})
-#                    phoneme_timings.append([group_name, p_time * context.scene.render.fps])
 
-
-        # if pw_idx < len(word_list_info) - 1:
-        #     next_word_start_time = word_list_info[pw_idx + 1]["start"]
-        #     next_word_start_frame = int(next_word_start_time * fps)
-        #     word_end_frame = int(word_time_end * fps)
-        #     if word_end_frame + word_pad_frames < next_word_start_frame - word_pad_frames:
-        #         phoneme_timings.append({"group": "rest", "time": float(word_end_frame + word_pad_frames) / fps,\
-        #                                 "frame": word_end_frame + word_pad_frames})
-            #if next_word_start_time > word_time_end + rest_cooldown_time:
-                
-        
-                #phoneme_timings.append({"group": "rest", "time": word_time_end + rest_cooldown_time, "frame": })
-    
     if len(phoneme_timings) == 0:
         #No phonemes - skip
         return
@@ -623,11 +609,6 @@ def render_lipsync_to_action(context, tgt_action, seq):
         end_time = word_list_info[-1]["end"]
         phoneme_timings.append({"group": "rest", "frame": int(end_time * fps)})
 
-    # if final_word and phoneme_timings[-1]["group"] != "rest":
-    #     word_end_frame = int(final_word["end"] * fps) + word_pad_frames 
-    #     phoneme_timings.append({"group": "rest", "time": word_end_frame / float(fps), "frame": word_end_frame})
-                
-                
     #print("phoneme_timings ", phoneme_timings)
     
     for idx, phone_timing in enumerate(phoneme_timings):
@@ -660,73 +641,56 @@ def render_lipsync_to_action(context, tgt_action, seq):
         for fcurve_group in grouped_fcurves:
             match fcurve_group[0]:
                 case 'location':
-                    src_curve_x = fcurve_group[1][0]
-                    src_curve_y = fcurve_group[1][1]
-                    src_curve_z = fcurve_group[1][2]
+                    # if len(fcurve_group[1]) <= 2:
+                    #     pass
+                    for src_curve in fcurve_group[1]:
 
-                    tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
-                    tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
-                    tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
 
-                    range = src_action.curve_frame_range
-                    #print("range ", range)
+                        range = src_action.curve_frame_range
+                        #print("range ", range)
 
-                    src_frames = sorted(list(set([k.co[0] for k in src_curve_x.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_y.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_z.keyframe_points])))
+                        src_frames = [k.co[0] for k in src_curve.keyframe_points]
 
-                    for frame in src_frames:
-                        x = src_curve_x.evaluate(frame)
-                        y = src_curve_y.evaluate(frame)
-                        z = src_curve_z.evaluate(frame)
+                        for frame in src_frames:
+                            x = src_curve.evaluate(frame)
+                            if x > 0.1:
+                                pass
 
-                        tgt_frame = frame - range[0] + phone_timing["frame"]
+                            tgt_frame = frame - range[0] + phone_timing["frame"]
 
-                        atten = attenuation
-                        if attenuate_volume:
-                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
-                            vol_atten = sound_profile[index]
-                            atten *= vol_atten
+                            # if tgt_frame > 1350:
+                            #     pass
 
-                        src_vec = mathutils.Vector([x, y, z]) * atten
-                        
-                        set_target_keyframe(tgt_curve_x, tgt_frame, src_vec.x, key_interpolation)
-                        set_target_keyframe(tgt_curve_y, tgt_frame, src_vec.y, key_interpolation)
-                        set_target_keyframe(tgt_curve_z, tgt_frame, src_vec.z, key_interpolation)
+                            atten = attenuation
+                            if attenuate_volume:
+                                index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
+                                vol_atten = sound_profile[index]
+                                atten *= vol_atten
+
+                            set_target_keyframe(tgt_curve, tgt_frame, x * atten, key_interpolation)
 
                 case 'rotation_euler':
-                    src_curve_x = fcurve_group[1][0]
-                    src_curve_y = fcurve_group[1][1]
-                    src_curve_z = fcurve_group[1][2]
+                    for src_curve in fcurve_group[1]:
 
-                    tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
-                    tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
-                    tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
 
-                    range = src_action.curve_frame_range
+                        range = src_action.curve_frame_range
 
-                    src_frames = sorted(list(set([k.co[0] for k in src_curve_x.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_y.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_z.keyframe_points])))
+                        src_frames = [k.co[0] for k in src_curve.keyframe_points]
 
-                    for frame in src_frames:
-                        x = src_curve_x.evaluate(frame)
-                        y = src_curve_y.evaluate(frame)
-                        z = src_curve_z.evaluate(frame)
+                        for frame in src_frames:
+                            x = src_curve.evaluate(frame)
+                            
 
-                        tgt_frame = frame - range[0] + phone_timing["frame"]
-                        atten = attenuation
-                        if attenuate_volume:
-                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
-                            vol_atten = sound_profile[index]
-                            atten *= vol_atten
-                        atten = min(max(atten, 0), 1)
+                            tgt_frame = frame - range[0] + phone_timing["frame"]
+                            atten = attenuation
 
-                        src_vec = mathutils.Euler([x * atten, y * atten, z * atten])
-                        
-                        set_target_keyframe(tgt_curve_x, tgt_frame, src_vec.x, key_interpolation)
-                        set_target_keyframe(tgt_curve_y, tgt_frame, src_vec.y, key_interpolation)
-                        set_target_keyframe(tgt_curve_z, tgt_frame, src_vec.z, key_interpolation)
+#                            atten = min(max(atten, 0), 1)
+
+                            #src_vec = mathutils.Euler([x * atten, y * atten, z * atten])
+                            
+                            set_target_keyframe(tgt_curve, tgt_frame, x * atten, key_interpolation)
 
                 case 'rotation_quaternion':
                     src_curve_w = fcurve_group[1][0]
@@ -769,39 +733,30 @@ def render_lipsync_to_action(context, tgt_action, seq):
                         set_target_keyframe(tgt_curve_y, tgt_frame, eval_quat.y, key_interpolation)
                         set_target_keyframe(tgt_curve_z, tgt_frame, eval_quat.z, key_interpolation)
                 case 'scale':
-                    src_curve_x = fcurve_group[1][0]
-                    src_curve_y = fcurve_group[1][1]
-                    src_curve_z = fcurve_group[1][2]
+                    for src_curve in fcurve_group[1]:
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
 
-                    tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
-                    tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
-                    tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+                        range = src_action.curve_frame_range
 
-                    range = src_action.curve_frame_range
+                        src_frames = [k.co[0] for k in src_curve.keyframe_points]
 
-                    src_frames = sorted(list(set([k.co[0] for k in src_curve_x.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_y.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_z.keyframe_points])))
+                        for frame in src_frames:
+                            x = src_curve.evaluate(frame)
 
-                    for frame in src_frames:
-                        x = src_curve_x.evaluate(frame)
-                        y = src_curve_y.evaluate(frame)
-                        z = src_curve_z.evaluate(frame)
+                            tgt_frame = frame - range[0] + phone_timing["frame"]
+                            atten = attenuation
+                            if attenuate_volume:
+                                index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
+                                vol_atten = sound_profile[index]
+                                atten *= vol_atten
 
-                        tgt_frame = frame - range[0] + phone_timing["frame"]
-                        atten = attenuation
-                        if attenuate_volume:
-                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
-                            vol_atten = sound_profile[index]
-                            atten *= vol_atten
-
-                        identity = mathutils.Vector([1, 1, 1])
-                        src_vec = mathutils.Vector([x, y, z])
-                        eval_vec = identity.lerp(src_vec, atten)
+#                            identity = mathutils.Vector([1, 1, 1])
+#                            src_vec = mathutils.Vector([x, y, z])
                         
-                        set_target_keyframe(tgt_curve_x, tgt_frame, eval_vec.x, key_interpolation)
-                        set_target_keyframe(tgt_curve_y, tgt_frame, eval_vec.y, key_interpolation)
-                        set_target_keyframe(tgt_curve_z, tgt_frame, eval_vec.z, key_interpolation)
+#                            eval_vec = identity.lerp(src_vec, atten)
+                            eval_vec = atten + (1 - atten) * x
+                            
+                            set_target_keyframe(tgt_curve, tgt_frame, eval_vec, key_interpolation)
 
                 case _:
                     for src_curve in fcurve_group[1]:

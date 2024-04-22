@@ -686,52 +686,65 @@ def render_lipsync_to_action(context, tgt_action, seq):
                             tgt_frame = frame - range[0] + phone_timing["frame"]
                             atten = attenuation
 
-#                            atten = min(max(atten, 0), 1)
-
-                            #src_vec = mathutils.Euler([x * atten, y * atten, z * atten])
-                            
                             set_target_keyframe(tgt_curve, tgt_frame, x * atten, key_interpolation)
 
                 case 'rotation_quaternion':
-                    src_curve_w = fcurve_group[1][0]
-                    src_curve_x = fcurve_group[1][1]
-                    src_curve_y = fcurve_group[1][2]
-                    src_curve_z = fcurve_group[1][3]
+                    if len(fcurve_group[1]) < 3:
+                        for src_curve in fcurve_group[1]:
 
-                    tgt_curve_w = get_or_create_fcurve(tgt_action, src_curve_w.data_path, src_curve_w.array_index, src_curve_w.group.name)
-                    tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
-                    tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
-                    tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+                            tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
+                            range = src_action.curve_frame_range
 
-                    range = src_action.curve_frame_range
+                            src_frames = [k.co[0] for k in src_curve.keyframe_points]
 
-                    src_frames = sorted(list(set([k.co[0] for k in src_curve_w.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_x.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_y.keyframe_points] \
-                                         + [k.co[0] for k in src_curve_z.keyframe_points])))
+                            for frame in src_frames:
+                                tgt_frame = frame - range[0] + phone_timing["frame"]
 
-                    for frame in src_frames:
-                        w = src_curve_w.evaluate(frame)
-                        x = src_curve_x.evaluate(frame)
-                        y = src_curve_y.evaluate(frame)
-                        z = src_curve_z.evaluate(frame)
+                                value = src_curve.evaluate(frame)
 
-                        tgt_frame = frame - range[0] + phone_timing["frame"]
-                        atten = attenuation
-                        if attenuate_volume:
-                            index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
-                            vol_atten = sound_profile[index]
-                            atten *= vol_atten
-                        atten = min(max(atten, 0), 1)
+                                src_vec = value
+                                
+                                set_target_keyframe(tgt_curve, tgt_frame, value, key_interpolation)
+                    else:
+                        src_curve_w = fcurve_group[1][0]
+                        src_curve_x = fcurve_group[1][1]
+                        src_curve_y = fcurve_group[1][2]
+                        src_curve_z = fcurve_group[1][3]
 
-                        identity_quat = mathutils.Quaternion()
-                        src_quat = mathutils.Quaternion([w, x, y, z])
-                        eval_quat = identity_quat.slerp(src_quat, atten)
-                        
-                        set_target_keyframe(tgt_curve_w, tgt_frame, eval_quat.w, key_interpolation)
-                        set_target_keyframe(tgt_curve_x, tgt_frame, eval_quat.x, key_interpolation)
-                        set_target_keyframe(tgt_curve_y, tgt_frame, eval_quat.y, key_interpolation)
-                        set_target_keyframe(tgt_curve_z, tgt_frame, eval_quat.z, key_interpolation)
+                        tgt_curve_w = get_or_create_fcurve(tgt_action, src_curve_w.data_path, src_curve_w.array_index, src_curve_w.group.name)
+                        tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
+                        tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
+                        tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+
+                        range = src_action.curve_frame_range
+
+                        src_frames = sorted(list(set([k.co[0] for k in src_curve_w.keyframe_points] \
+                                            + [k.co[0] for k in src_curve_x.keyframe_points] \
+                                            + [k.co[0] for k in src_curve_y.keyframe_points] \
+                                            + [k.co[0] for k in src_curve_z.keyframe_points])))
+
+                        for frame in src_frames:
+                            w = src_curve_w.evaluate(frame)
+                            x = src_curve_x.evaluate(frame)
+                            y = src_curve_y.evaluate(frame)
+                            z = src_curve_z.evaluate(frame)
+
+                            tgt_frame = frame - range[0] + phone_timing["frame"]
+                            atten = attenuation
+                            if attenuate_volume:
+                                index = int(min(max(tgt_frame, 0), len(sound_profile) - 1))
+                                vol_atten = sound_profile[index]
+                                atten *= vol_atten
+                            atten = min(max(atten, 0), 1)
+
+                            identity_quat = mathutils.Quaternion()
+                            src_quat = mathutils.Quaternion([w, x, y, z])
+                            eval_quat = identity_quat.slerp(src_quat, atten)
+                            
+                            set_target_keyframe(tgt_curve_w, tgt_frame, eval_quat.w, key_interpolation)
+                            set_target_keyframe(tgt_curve_x, tgt_frame, eval_quat.x, key_interpolation)
+                            set_target_keyframe(tgt_curve_y, tgt_frame, eval_quat.y, key_interpolation)
+                            set_target_keyframe(tgt_curve_z, tgt_frame, eval_quat.z, key_interpolation)
                 case 'scale':
                     for src_curve in fcurve_group[1]:
                         tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)

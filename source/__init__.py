@@ -40,14 +40,18 @@ from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncSetupPanel
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToAction
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToRigNla
-from .parrot_lipsync import PLUGIN_OT_ParrotInstallWhisper
-from .parrot_lipsync import PLUGIN_OT_ParrotInstallGruut
+#from .parrot_lipsync import PLUGIN_OT_ParrotInstallWhisper
+#from .parrot_lipsync import PLUGIN_OT_ParrotInstallGruut
 from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
+from .parrot_lipsync import ParrotAddonPreferences
+from .parrot_lipsync import InstallWhisper
+from .parrot_lipsync import UninstallWhisper
+
 
 
 ### REGISTRATION ###
 
-classes=[
+_classes=[
     ParrotPoseProps,
     ParrotLipsyncProps,
     PLUGIN_PT_ParrotLipsyncPanel,
@@ -58,23 +62,27 @@ classes=[
 #    PLUGIN_OT_ParrotInstallWhisper,
 #    PLUGIN_OT_ParrotInstallGruut,
     PLUGIN_OT_ParrotReloadPhonemeTable,
+    ParrotAddonPreferences,
+    InstallWhisper,
+    UninstallWhisper,
 ]
 
+_register, _unregister = bpy.utils.register_classes_factory(_classes)
+
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    # for cls in _classes:
+        # bpy.utils.register_class(cls)
+    _register()
         
     bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
- #   update_phoneme_group_pose_list(bpy.types.Scene)
-    
-    # addon_path =  os.path.dirname(__file__)
-    # icons_dir = os.path.join(addon_path, "icons")    
+
 
 def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    # for cls in _classes:
+        # bpy.utils.unregister_class(cls)
+    _unregister()
         
     bpy.types.Scene.props = None
 
-if __name__ == "__main__":
-    register()
+# if __name__ == "__main__":
+    # register()

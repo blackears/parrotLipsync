@@ -37,6 +37,7 @@ import subprocess
 import sys
 import os
 import bpy
+import site
 import hashlib
 import importlib
 import itertools
@@ -493,10 +494,6 @@ def render_lipsync_to_action(context, tgt_action, seq):
     props = context.scene.props
     
     
-    #whisper_library_model = props.whisper_library_model
-    #autodetect_language = props.autodetect_language
-    #language_code = props.language_code
-    #target_object = props.target_object
     key_interpolation = props.key_interpolation
     attenuation = props.attenuation
     attenuate_volume = props.attenuate_volume
@@ -930,44 +927,132 @@ class PLUGIN_OT_ParrotReloadPhonemeTable(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class PLUGIN_OT_ParrotInstallWhisper(bpy.types.Operator):
-    """
-    Install Whisper
-    """
-    bl_label = "Install/Update Whisper"
-    bl_idname = "parrot.install_whisper"
+# class PLUGIN_OT_ParrotInstallWhisper(bpy.types.Operator):
+    # """
+    # Install Whisper
+    # """
+    # bl_label = "Install/Update Whisper"
+    # bl_idname = "parrot.install_whisper"
     
-    def execute(self, context):
-        python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-        target = os.path.join(sys.prefix, 'lib', 'site-packages')
+    # def execute(self, context):
+        # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+        # target = os.path.join(sys.prefix, 'lib', 'site-packages')
          
-        subprocess.call([python_exe, '-m', 'ensurepip'])
-        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
+        # subprocess.call([python_exe, '-m', 'ensurepip'])
+        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-        #example package to install (SciPy):
-        #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
+        # #example package to install (SciPy):
+        # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
+        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
 
+        # return {'FINISHED'}
+
+
+# class PLUGIN_OT_ParrotInstallGruut(bpy.types.Operator):
+    # """
+    # Install Gruut
+    # """
+    # bl_label = "Install/Update Gruut"
+    # bl_idname = "parrot.install_gruut"
+    
+    # def execute(self, context):
+        # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+        # target = os.path.join(sys.prefix, 'lib', 'site-packages')
+         
+        # subprocess.call([python_exe, '-m', 'ensurepip'])
+        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
+
+        # #example package to install (SciPy):
+        # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
+        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'gruut', '-t', target])
+
+        # return {'FINISHED'}
+
+
+
+
+
+# Returns true if whisper_timestamped has been installed.
+def is_whisper_installed() -> bool:
+    try:
+        # Blender does not add the user's site-packages/ directory by default.
+        sys.path.append(site.getusersitepackages())
+        return importlib.util.find_spec('whisper_timestamped') is not None
+    finally:
+        sys.path.remove(site.getusersitepackages())
+
+
+class ParrotAddonPreferences(bpy.types.AddonPreferences):
+    bl_idname = __package__
+
+    # port: IntProperty(name="Server Port", default=5678, min=1024, max=65535,
+        # description="The port number the debug server will listen on. This must match the " +
+        # "port number configured in the debugger application.")
+
+    def draw(self, context):
+        installed = is_whisper_installed()
+        layout = self.layout
+        layout.use_property_split = True
+        
+        if installed: 
+            #layout.prop(self, 'port')
+            layout.operator(UninstallWhisper.bl_idname)
+        else:
+            layout.operator(InstallWhisper.bl_idname)            
+        
+
+class InstallWhisper(bpy.types.Operator):
+    """Installs whisper package into Blender's Python distribution."""
+    bl_idname = "script.install_whisper"
+    bl_label = "Install whisper_timestamped"
+
+    def execute(self, context):
+        python = os.path.abspath(sys.executable)
+        self.report({'INFO'}, "Installing 'whisper' package.")
+        # Verify 'pip' package manager is installed.
+        try:
+            context.window.cursor_set('WAIT')
+            subprocess.call([python, "-m", "ensurepip"])
+            # Upgrade 'pip'. This shouldn't be needed.
+            # subprocess.call([python, "-m", "pip", "install", "--upgrade", "pip", "--yes"])
+        except Exception:
+            self.report({'ERROR'}, "Failed to verify 'pip' package manager installation.")
+            return {'FINISHED'}
+        finally:
+            context.window.cursor_set('DEFAULT')
+        
+        # Install 'whisper_timestamped' package.
+        try:
+            context.window.cursor_set('WAIT')
+            subprocess.call([python, "-m", "pip", "install", "whisper_timestamped"])
+        except Exception:
+            self.report({'ERROR'}, "Failed to install 'whisper_timestamped' package.")
+            return {'FINISHED'}
+        finally:
+            context.window.cursor_set('DEFAULT')
+        
+        self.report({'INFO'}, "Successfully installed 'whisper_timestamped' package.")
         return {'FINISHED'}
 
+class UninstallWhisper(bpy.types.Operator):
+    """Uninstalls whisper package from Blender's Python distribution."""
+    bl_idname = "script.uninstall_whisper"
+    bl_label = "Uninstall whisper"
 
-class PLUGIN_OT_ParrotInstallGruut(bpy.types.Operator):
-    """
-    Install Gruut
-    """
-    bl_label = "Install/Update Gruut"
-    bl_idname = "parrot.install_gruut"
-    
     def execute(self, context):
-        python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-        target = os.path.join(sys.prefix, 'lib', 'site-packages')
-         
-        subprocess.call([python_exe, '-m', 'ensurepip'])
-        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
-
-        #example package to install (SciPy):
-        #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-        subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'gruut', '-t', target])
-
+        python = os.path.abspath(sys.executable)
+        self.report({'INFO'}, "Uninstalling 'whisper_timestamped' package.")
+        
+        # Uninstall 'whisper_timestamped' package.
+        try:
+            context.window.cursor_set('WAIT')
+            subprocess.call([python, "-m", "pip", "uninstall", "whisper_timestamped", "--yes"])
+        except Exception:
+            self.report({'ERROR'}, "Failed to uninstall 'whisper_timestamped' package.")
+            return {'FINISHED'}
+        finally:
+            context.window.cursor_set('DEFAULT')
+        
+        self.report({'INFO'}, "Successfully uninstalled 'whisper_timestamped' package.")
         return {'FINISHED'}
 

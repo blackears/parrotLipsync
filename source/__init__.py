@@ -46,6 +46,10 @@ from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
 from .parrot_lipsync import ParrotAddonPreferences
 from .parrot_lipsync import InstallWhisper
 from .parrot_lipsync import UninstallWhisper
+from .parrot_lipsync import InstallGruut
+from .parrot_lipsync import UninstallGruut
+from .parrot_lipsync import InstallGruutLangRu
+from .parrot_lipsync import UninstallGruutLangRu
 
 
 
@@ -65,6 +69,10 @@ _classes=[
     ParrotAddonPreferences,
     InstallWhisper,
     UninstallWhisper,
+    InstallGruut,
+    UninstallGruut,
+    InstallGruutLangRu,
+    UninstallGruutLangRu,
 ]
 
 _register, _unregister = bpy.utils.register_classes_factory(_classes)

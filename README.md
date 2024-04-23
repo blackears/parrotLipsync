@@ -42,7 +42,7 @@ scoop install ffmpeg
 ```
 
 
-### Installing Parrot addon
+### Installing the Parrot Lipsync addon
 
 Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Preferences > Addons` window and clicking the `Install` button.  Browse to the Parrot Lipsync zip file you downloaded and select it.  Finally, make sure the check mark next to `View 3D: Parrot Lipsync` is checked so that the addon is activated.
 

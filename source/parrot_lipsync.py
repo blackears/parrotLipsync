@@ -999,16 +999,14 @@ class ParrotAddonPreferences(bpy.types.AddonPreferences):
             layout.operator(UninstallWhisper.bl_idname)
         else:
             layout.operator(InstallWhisper.bl_idname)            
-        
 
-class InstallWhisper(bpy.types.Operator):
-    """Installs whisper package into Blender's Python distribution."""
-    bl_idname = "script.install_whisper"
-    bl_label = "Install whisper_timestamped"
+class LibraryInstaller(bpy.types.Operator):
+    def __init__(self, lib_name):
+        self.lib_name = lib_name
 
     def execute(self, context):
         python = os.path.abspath(sys.executable)
-        self.report({'INFO'}, "Installing 'whisper' package.")
+        self.report({'INFO'}, "Installing '" + self.lib_name + "' package.")
         # Verify 'pip' package manager is installed.
         try:
             context.window.cursor_set('WAIT')
@@ -1024,35 +1022,53 @@ class InstallWhisper(bpy.types.Operator):
         # Install 'whisper_timestamped' package.
         try:
             context.window.cursor_set('WAIT')
-            subprocess.call([python, "-m", "pip", "install", "whisper_timestamped"])
+            subprocess.call([python, "-m", "pip", "install", self.lib_name])
         except Exception:
-            self.report({'ERROR'}, "Failed to install 'whisper_timestamped' package.")
+            self.report({'ERROR'}, "Failed to install '" + self.lib_name + "' package.")
             return {'FINISHED'}
         finally:
             context.window.cursor_set('DEFAULT')
         
-        self.report({'INFO'}, "Successfully installed 'whisper_timestamped' package.")
+        self.report({'INFO'}, "Successfully installed '" + self.lib_name + "' package.")
         return {'FINISHED'}
+        
+class LibraryUninstaller(bpy.types.Operator):
+    def __init__(self, lib_name):
+        self.lib_name = lib_name
 
-class UninstallWhisper(bpy.types.Operator):
-    """Uninstalls whisper package from Blender's Python distribution."""
-    bl_idname = "script.uninstall_whisper"
-    bl_label = "Uninstall whisper"
 
     def execute(self, context):
         python = os.path.abspath(sys.executable)
-        self.report({'INFO'}, "Uninstalling 'whisper_timestamped' package.")
+        self.report({'INFO'}, "Uninstalling '" + self.lib_name + "' package.")
         
-        # Uninstall 'whisper_timestamped' package.
+        # Uninstall package.
         try:
             context.window.cursor_set('WAIT')
-            subprocess.call([python, "-m", "pip", "uninstall", "whisper_timestamped", "--yes"])
+            subprocess.call([python, "-m", "pip", "uninstall", self.lib_name, "--yes"])
         except Exception:
-            self.report({'ERROR'}, "Failed to uninstall 'whisper_timestamped' package.")
+            self.report({'ERROR'}, "Failed to uninstall '" + self.lib_name + "' package.")
             return {'FINISHED'}
         finally:
             context.window.cursor_set('DEFAULT')
         
-        self.report({'INFO'}, "Successfully uninstalled 'whisper_timestamped' package.")
+        self.report({'INFO'}, "Successfully uninstalled '" + self.lib_name + "' package.")
         return {'FINISHED'}
 
+
+
+class InstallWhisper(LibraryInstaller):
+    """Installs whisper_timestamped package into Blender's Python distribution."""
+    bl_idname = "script.install_whisper"
+    bl_label = "Install whisper_timestamped"
+
+    def __init__(self):
+        super().__init__("whisper_timestamped")
+
+
+class UninstallWhisper(LibraryUninstaller):
+    """Uninstalls whisper_timestamped package from Blender's Python distribution."""
+    bl_idname = "script.uninstall_whisper"
+    bl_label = "Uninstall whisper_timestamped"
+
+    def __init__(self):
+        super().__init__("whisper_timestamped")

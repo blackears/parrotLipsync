@@ -9,6 +9,7 @@ This is an addon for Blender that lets you automatically generate lip-synced dat
 
 ## Installation
 
+
 Parrot Lipsync relies on you having some other applications already installed on your computer.
 
 ### Install Ffmpeg
@@ -41,14 +42,24 @@ scoop install ffmpeg
 ```
 
 
+### Installing Parrot addon
+
+Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Preferences > Addons` window and clicking the `Install` button.  Browse to the Parrot Lipsync zip file you downloaded and select it.  Finally, make sure the check mark next to `View 3D: Parrot Lipsync` is checked so that the addon is activated.
+
 ### Install Whisper and Gruut
 
-You will need to install some Python extensions to your Blender distribution of Python.  Blender uses its own copy of Python, so you will need to install these packages there even if you already have Python installed elsewhere on your system.
+Parrot needs some support libraries to function.  The easiest way to install them is to open Parrot's configuration page in the `Addon` window to reveal the buttons on the bottom.  Press the `Install whisper_timestamped` and `Install gruut` buttons to ensure these necessary libraries are added to your Blender's python packages.  Some languages will require an additional package - for example, if you intend to use the Russian language, make sure to click the `Install gruut-lang-ru` button as well.
+
+![Addon install panel](doc/addon_install_panel.jpg)
+
+
+### Alternate installation procedure for Whisper and Gruut
+
+It is also possible to install Whsiper and Gruut on the command line as well if you don't want to use the installation panel.
 
 Open a terminal window and go into your Blender installation's python directory (on Windows it should be something like `C:\Program Files\Blender Foundation\Blender 4.0\4.0\python\bin`).  Then issue the following commands:
 
 ```
-./python.exe -m pip install --upgrade numpy
 ./python.exe -m pip install --upgrade whisper_timestamped
 ./python.exe -m pip install --upgrade gruut
 ```
@@ -56,7 +67,6 @@ Open a terminal window and go into your Blender installation's python directory 
 For MacOS and Linux, the following should work:
 
 ```
-./python -m pip install --upgrade numpy
 ./python -m pip install --upgrade whisper_timestamped
 ./python -m pip install --upgrade gruut
 ```
@@ -67,17 +77,6 @@ Some languages will require additional packages to be installed:
 Russian:
 ./python.exe -m pip install --upgrade gruut-lang-ru
 ```
-
-
-### Installing the ParrotLipsync addon
-
-You can install the addon by:
-* opening Blender's `Edit/Preferences` menu
-* opening the Addons section
-* clicking the Install button 
-* browsing to the `parrot_lipsync.zip` file
-
-Once installed, make sure that you check the box to enable it.  A new tab will appear in the viewport right hand tab menu.
 
 ## Usage
 

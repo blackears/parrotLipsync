@@ -480,12 +480,12 @@ def set_target_keyframe(tgt_curve, frame, value, interp_type):
 
     return tgt_kf
 
-def get_or_create_fcurve(tgt_action, data_path, array_index, group_name):
+def get_or_create_fcurve(tgt_action, data_path, array_index, group):
     tgt_curve = tgt_action.fcurves.find(data_path, index = array_index)
     if not tgt_curve:
         tgt_curve = tgt_action.fcurves.new(data_path, index = array_index)
-        if group_name in tgt_action.groups:
-            tgt_curve.group = tgt_action.groups[group_name]
+        if group and group.name in tgt_action.groups:
+            tgt_curve.group = tgt_action.groups[group.name]
 
     return tgt_curve
 
@@ -642,7 +642,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
                     #     pass
                     for src_curve in fcurve_group[1]:
 
-                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group)
 
                         range = src_action.curve_frame_range
                         #print("range ", range)
@@ -670,7 +670,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
                 case 'rotation_euler':
                     for src_curve in fcurve_group[1]:
 
-                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group)
 
                         range = src_action.curve_frame_range
 
@@ -689,7 +689,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
                     if len(fcurve_group[1]) < 3:
                         for src_curve in fcurve_group[1]:
 
-                            tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
+                            tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group)
                             range = src_action.curve_frame_range
 
                             src_frames = [k.co[0] for k in src_curve.keyframe_points]
@@ -708,10 +708,10 @@ def render_lipsync_to_action(context, tgt_action, seq):
                         src_curve_y = fcurve_group[1][2]
                         src_curve_z = fcurve_group[1][3]
 
-                        tgt_curve_w = get_or_create_fcurve(tgt_action, src_curve_w.data_path, src_curve_w.array_index, src_curve_w.group.name)
-                        tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group.name)
-                        tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group.name)
-                        tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group.name)
+                        tgt_curve_w = get_or_create_fcurve(tgt_action, src_curve_w.data_path, src_curve_w.array_index, src_curve_w.group)
+                        tgt_curve_x = get_or_create_fcurve(tgt_action, src_curve_x.data_path, src_curve_x.array_index, src_curve_x.group)
+                        tgt_curve_y = get_or_create_fcurve(tgt_action, src_curve_y.data_path, src_curve_y.array_index, src_curve_y.group)
+                        tgt_curve_z = get_or_create_fcurve(tgt_action, src_curve_z.data_path, src_curve_z.array_index, src_curve_z.group)
 
                         range = src_action.curve_frame_range
 
@@ -744,7 +744,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
                             set_target_keyframe(tgt_curve_z, tgt_frame, eval_quat.z, key_interpolation)
                 case 'scale':
                     for src_curve in fcurve_group[1]:
-                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group)
 
                         range = src_action.curve_frame_range
 
@@ -771,7 +771,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
                 case _:
                     for src_curve in fcurve_group[1]:
 
-                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group.name)
+                        tgt_curve = get_or_create_fcurve(tgt_action, src_curve.data_path, src_curve.array_index, src_curve.group)
                         range = src_action.curve_frame_range
 
                         src_frames = [k.co[0] for k in src_curve.keyframe_points]

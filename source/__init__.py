@@ -23,7 +23,7 @@
 bl_info = {
     "name": "Parrot Lipsync",
     "author": "Mark McKay",
-    "version": (1, 0, 3),
+    "version": (1, 0, 4),
     "blender": (4, 0, 0),
     "location": "View3D > Export > Mesh Exporter",
     "description": "Generate lipsync tracks from audio files using Whisper AI.",
@@ -40,8 +40,6 @@ from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncSetupPanel
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToAction
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToRigNla
-#from .parrot_lipsync import PLUGIN_OT_ParrotInstallWhisper
-#from .parrot_lipsync import PLUGIN_OT_ParrotInstallGruut
 from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
 from .parrot_lipsync import ParrotAddonPreferences
 from .parrot_lipsync import InstallWhisper
@@ -60,11 +58,8 @@ _classes=[
     ParrotLipsyncProps,
     PLUGIN_PT_ParrotLipsyncPanel,
     PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
-#    PLUGIN_PT_ParrotLipsyncSetupPanel,
     PLUGIN_OT_ParrotRenderLipsyncToAction,
     PLUGIN_OT_ParrotRenderLipsyncToRigNla,
-#    PLUGIN_OT_ParrotInstallWhisper,
-#    PLUGIN_OT_ParrotInstallGruut,
     PLUGIN_OT_ParrotReloadPhonemeTable,
     ParrotAddonPreferences,
     InstallWhisper,

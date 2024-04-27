@@ -396,8 +396,8 @@ def get_phonemes_from_file(context, seq):
     path = bpy.path.abspath(seq.sound.filepath)
 
     md5_hash = md5(path)
-    if use_cached_dialog and md5_hash in phoneme_cache:
-        return (word_list_info_cache[md5_hash], phoneme_cache[md5_hash], sound_profile_cache[md5_hash])
+    # if use_cached_dialog and md5_hash in phoneme_cache:
+    #     return (word_list_info_cache[md5_hash], phoneme_cache[md5_hash], sound_profile_cache[md5_hash])
     
     model = whisper.load_model(whisper_library_model)
 
@@ -431,14 +431,37 @@ def get_phonemes_from_file(context, seq):
     word_list = []
     word_list_info = []
     for seg in whisper_result["segments"]:
-        for word in seg["words"]:
-            word_list.append(word["text"])
-            word_list_info.append(word)
+        if "words" in seg:
+            for word in seg["words"]:
+                word_list.append(word["text"])
+                word_list_info.append(word)
+                
+    #           print("word %s %f %f" % (word["text"], word["start"], word["end"]))
+                #word["text"]
+                #word["start"]
+                #word["end"]
+        else:
+            #https://jrgraphix.net/r/Unicode/
+            #2E80 — 2EFF  	CJK Radicals Supplement
+            #3000 — 303F  	CJK Symbols and Punctuation
+            #3300 — 33FF  	CJK Compatibility
+            #3400 — 4DBF  	CJK Unified Ideographs Extension A
+            #4E00 — 9FFF  	CJK Unified Ideographs
+
+            #regex.search(r'\p{Han}', ipath)
+            #regex.findall(r'\p{Han}+', ipath)
+            #re.search(u'[\u4e00-\u9fff]', x)
+
+            # for ch in seg["text"]:
+            #      print(ch, " ", hex(ord(ch)))
+            #      pass
             
- #           print("word %s %f %f" % (word["text"], word["start"], word["end"]))
-            #word["text"]
-            #word["start"]
-            #word["end"]
+            # seg["text"]
+            # seg["start"]
+            # seg["end"]
+            pass
+
+
     
     
     phoneme_word_list = []

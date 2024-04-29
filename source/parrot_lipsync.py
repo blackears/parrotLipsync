@@ -983,23 +983,30 @@ class ParrotAddonPreferences(bpy.types.AddonPreferences):
         self.add_installer_button(context, layout, "gruut")
         
         box_single = layout.box()
+        box_single.label(text="Gruut language packs:")
 
-        row = box_single.row()
-        row.label(text="Arabic: ")
-        self.add_installer_button(context, row, "gruut-lang-ar")
+        gruut_lang_packs = [
+            ["Arabic", "gruut-lang-ar"],
+            ["Czech", "gruut-lang-cs"],
+            ["German", "gruut-lang-de"],
+            ["English", "gruut-lang-en"],
+            ["Spanish", "gruut-lang-es"],
+            ["Farsi/Persian", "gruut-lang-fa"],
+            ["French", "gruut-lang-fr"],
+            ["Italian", "gruut-lang-it"],
+            ["Luxembourgish", "gruut-lang-lb"],
+            ["Dutch", "gruut-lang-nl"],
+            ["Portuguese", "gruut-lang-pt"],
+            ["Russian", "gruut-lang-ru"],
+            ["Sweedish", "gruut-lang-sv"],
+            ["Swahili", "gruut-lang-sw"],
+        ]
+
+        for tuple in gruut_lang_packs:
+            row = box_single.row()
+            row.label(text=tuple[0])
+            self.add_installer_button(context, row, tuple[1])
         
-        self.add_installer_button(context, box_single, "gruut-lang-cs")
-        self.add_installer_button(context, box_single, "gruut-lang-de")
-        self.add_installer_button(context, box_single, "gruut-lang-en")
-        self.add_installer_button(context, box_single, "gruut-lang-es")
-        self.add_installer_button(context, box_single, "gruut-lang-fa")
-        self.add_installer_button(context, box_single, "gruut-lang-fr")
-        self.add_installer_button(context, box_single, "gruut-lang-it")
-        self.add_installer_button(context, box_single, "gruut-lang-lb")
-        self.add_installer_button(context, box_single, "gruut-lang-nl")
-        self.add_installer_button(context, box_single, "gruut-lang-ru")
-        self.add_installer_button(context, box_single, "gruut-lang-sv")
-        self.add_installer_button(context, box_single, "gruut-lang-sw")
 
 class LibraryInstaller(bpy.types.Operator):
     bl_idname = "parrot.library_installer"

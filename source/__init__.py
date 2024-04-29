@@ -23,7 +23,7 @@
 bl_info = {
     "name": "Parrot Lipsync",
     "author": "Mark McKay",
-    "version": (1, 0, 4),
+    "version": (1, 0, 5),
     "blender": (4, 0, 0),
     "location": "View3D > Export > Mesh Exporter",
     "description": "Generate lipsync tracks from audio files using Whisper AI.",

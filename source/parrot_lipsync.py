@@ -1016,6 +1016,7 @@ class ParrotAddonPreferences(bpy.types.AddonPreferences):
 #        lib_names = ["whisper_timestamped", "gruut", "gruut-lang-ru"]
         lib_classes = [["whisper_timestamped", InstallWhisper, UninstallWhisper],  \
             ["gruut", InstallGruut, UninstallGruut],  \
+            ["gruut-lang-ar", InstallGruutLangAr, UninstallGruutLangAr],    \
             ["gruut-lang-pt", InstallGruutLangPt, UninstallGruutLangPt],    \
             ["gruut-lang-ru", InstallGruutLangRu, UninstallGruutLangRu]]
     
@@ -1121,7 +1122,24 @@ class UninstallGruut(LibraryUninstaller):
 
     def __init__(self):
         super().__init__("gruut")
-        
+
+class InstallGruutLangAr(LibraryInstaller):
+    """Installs gruut-lang-ar into Blender's Python distribution."""
+    bl_idname = "script.install_gruut_lang_ar"
+    bl_label = "Install gruut-lang-ar"
+
+    def __init__(self):
+        super().__init__("gruut-lang-ar")
+
+
+class UninstallGruutLangAr(LibraryUninstaller):
+    """Uninstalls gruut-lang-ar package from Blender's Python distribution."""
+    bl_idname = "script.uninstall_gruut_lang_ar"
+    bl_label = "Uninstall gruut-lang-ar"
+
+    def __init__(self):
+        super().__init__("gruut-lang-ar")
+
 class InstallGruutLangPt(LibraryInstaller):
     """Installs gruut-lang-pt into Blender's Python distribution."""
     bl_idname = "script.install_gruut_lang_pt"
@@ -1138,7 +1156,7 @@ class UninstallGruutLangPt(LibraryUninstaller):
 
     def __init__(self):
         super().__init__("gruut-lang-pt")
-        
+
 class InstallGruutLangRu(LibraryInstaller):
     """Installs gruut-lang-ru into Blender's Python distribution."""
     bl_idname = "script.install_gruut_lang_ru"

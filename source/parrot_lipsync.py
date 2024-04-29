@@ -950,95 +950,71 @@ class PLUGIN_OT_ParrotReloadPhonemeTable(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# class PLUGIN_OT_ParrotInstallWhisper(bpy.types.Operator):
-    # """
-    # Install Whisper
-    # """
-    # bl_label = "Install/Update Whisper"
-    # bl_idname = "parrot.install_whisper"
-    
-    # def execute(self, context):
-        # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-        # target = os.path.join(sys.prefix, 'lib', 'site-packages')
-         
-        # subprocess.call([python_exe, '-m', 'ensurepip'])
-        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
 
-        # #example package to install (SciPy):
-        # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
-
-        # return {'FINISHED'}
-
-
-# class PLUGIN_OT_ParrotInstallGruut(bpy.types.Operator):
-    # """
-    # Install Gruut
-    # """
-    # bl_label = "Install/Update Gruut"
-    # bl_idname = "parrot.install_gruut"
-    
-    # def execute(self, context):
-        # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-        # target = os.path.join(sys.prefix, 'lib', 'site-packages')
-         
-        # subprocess.call([python_exe, '-m', 'ensurepip'])
-        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
-
-        # #example package to install (SciPy):
-        # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-        # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'gruut', '-t', target])
-
-        # return {'FINISHED'}
-
-
-
-
-
-# Returns true if whisper_timestamped has been installed.
-def is_library_installed(lib_name) -> bool:
-    try:
-        # Blender does not add the user's site-packages/ directory by default.
-        sys.path.append(site.getusersitepackages())
-        return importlib.util.find_spec(lib_name.replace("-", "_")) is not None
-    finally:
-        sys.path.remove(site.getusersitepackages())
 
 
 class ParrotAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    # port: IntProperty(name="Server Port", default=5678, min=1024, max=65535,
-        # description="The port number the debug server will listen on. This must match the " +
-        # "port number configured in the debugger application.")
+    # Returns true if whisper_timestamped has been installed.
+    def is_library_installed(self, lib_name) -> bool:
+        try:
+            # Blender does not add the user's site-packages/ directory by default.
+            sys.path.append(site.getusersitepackages())
+            return importlib.util.find_spec(lib_name.replace("-", "_")) is not None
+        finally:
+            sys.path.remove(site.getusersitepackages())
+
+    def add_installer_button(self, context, layout, lib_name):
+        if self.is_library_installed(lib_name):
+            op_props = layout.operator(LibraryUninstaller.bl_idname, text="Uninstall " + lib_name)
+            op_props.lib_name = lib_name
+        else:
+            op_props = layout.operator(LibraryInstaller.bl_idname, text="Install " + lib_name)
+            op_props.lib_name = lib_name
 
     def draw(self, context):
-#        lib_names = ["whisper_timestamped", "gruut", "gruut-lang-ru"]
-        lib_classes = [["whisper_timestamped", InstallWhisper, UninstallWhisper],  \
-            ["gruut", InstallGruut, UninstallGruut],  \
-            ["gruut-lang-ar", InstallGruutLangAr, UninstallGruutLangAr],    \
-            ["gruut-lang-pt", InstallGruutLangPt, UninstallGruutLangPt],    \
-            ["gruut-lang-ru", InstallGruutLangRu, UninstallGruutLangRu]]
     
         layout = self.layout
         layout.use_property_split = True
         #layout.prop(self, 'port')
-            
-        for lib_class_tup in lib_classes:
-            installed = is_library_installed(lib_class_tup[0])
-            
-            if installed: 
-                layout.operator(lib_class_tup[2].bl_idname)
-            else:
-                layout.operator(lib_class_tup[1].bl_idname)            
+          
+        self.add_installer_button(context, layout, "whisper_timestamped")
+        self.add_installer_button(context, layout, "gruut")
+        
+        box_single = layout.box()
+
+        row = box_single.row()
+        row.label(text="Arabic: ")
+        self.add_installer_button(context, row, "gruut-lang-ar")
+        
+        self.add_installer_button(context, box_single, "gruut-lang-cs")
+        self.add_installer_button(context, box_single, "gruut-lang-de")
+        self.add_installer_button(context, box_single, "gruut-lang-en")
+        self.add_installer_button(context, box_single, "gruut-lang-es")
+        self.add_installer_button(context, box_single, "gruut-lang-fa")
+        self.add_installer_button(context, box_single, "gruut-lang-fr")
+        self.add_installer_button(context, box_single, "gruut-lang-it")
+        self.add_installer_button(context, box_single, "gruut-lang-lb")
+        self.add_installer_button(context, box_single, "gruut-lang-nl")
+        self.add_installer_button(context, box_single, "gruut-lang-ru")
+        self.add_installer_button(context, box_single, "gruut-lang-sv")
+        self.add_installer_button(context, box_single, "gruut-lang-sw")
 
 class LibraryInstaller(bpy.types.Operator):
-    def __init__(self, lib_name):
-        self.lib_name = lib_name
+    bl_idname = "parrot.library_installer"
+    bl_label = "Install python library"
+
+    lib_name: bpy.props.StringProperty(
+            name="Library name",
+            description="Name of library to be installed",
+            default="whisper_timestamped"
+        )
 
     def execute(self, context):
         python = os.path.abspath(sys.executable)
-        self.report({'INFO'}, "Installing '" + self.lib_name + "' package.")
+        
+        self.report({'INFO'}, "Installing '" + str(self.lib_name) + "' package.")
         # Verify 'pip' package manager is installed.
         try:
             context.window.cursor_set('WAIT')
@@ -1054,20 +1030,25 @@ class LibraryInstaller(bpy.types.Operator):
         # Install 'whisper_timestamped' package.
         try:
             context.window.cursor_set('WAIT')
-            subprocess.call([python, "-m", "pip", "install", self.lib_name])
+            subprocess.call([python, "-m", "pip", "install", str(self.lib_name)])
         except Exception:
-            self.report({'ERROR'}, "Failed to install '" + self.lib_name + "' package.")
+            self.report({'ERROR'}, "Failed to install '" + str(self.lib_name) + "' package.")
             return {'FINISHED'}
         finally:
             context.window.cursor_set('DEFAULT')
         
-        self.report({'INFO'}, "Successfully installed '" + self.lib_name + "' package.")
+        self.report({'INFO'}, "Successfully installed '" + str(self.lib_name) + "' package.")
         return {'FINISHED'}
         
 class LibraryUninstaller(bpy.types.Operator):
-    def __init__(self, lib_name):
-        self.lib_name = lib_name
+    bl_idname = "parrot.library_uninstaller"
+    bl_label = "Uninstall python library"
 
+    lib_name: bpy.props.StringProperty(
+            name="Library name",
+            description="Name of library to be installed",
+            default="whisper_timestamped"
+        )
 
     def execute(self, context):
         python = os.path.abspath(sys.executable)
@@ -1086,93 +1067,3 @@ class LibraryUninstaller(bpy.types.Operator):
         self.report({'INFO'}, "Successfully uninstalled '" + self.lib_name + "' package.")
         return {'FINISHED'}
 
-
-
-class InstallWhisper(LibraryInstaller):
-    """Installs whisper_timestamped package into Blender's Python distribution."""
-    bl_idname = "script.install_whisper_timestamped"
-    bl_label = "Install whisper_timestamped"
-
-    def __init__(self):
-        super().__init__("whisper_timestamped")
-
-
-class UninstallWhisper(LibraryUninstaller):
-    """Uninstalls whisper_timestamped package from Blender's Python distribution."""
-    bl_idname = "script.uninstall_whisper_timestamped"
-    bl_label = "Uninstall whisper_timestamped"
-
-    def __init__(self):
-        super().__init__("whisper_timestamped")
-
-
-class InstallGruut(LibraryInstaller):
-    """Installs gruut into Blender's Python distribution."""
-    bl_idname = "script.install_gruut"
-    bl_label = "Install gruut"
-
-    def __init__(self):
-        super().__init__("gruut")
-
-
-class UninstallGruut(LibraryUninstaller):
-    """Uninstalls gruut package from Blender's Python distribution."""
-    bl_idname = "script.uninstall_gruut"
-    bl_label = "Uninstall gruut"
-
-    def __init__(self):
-        super().__init__("gruut")
-
-class InstallGruutLangAr(LibraryInstaller):
-    """Installs gruut-lang-ar into Blender's Python distribution."""
-    bl_idname = "script.install_gruut_lang_ar"
-    bl_label = "Install gruut-lang-ar"
-
-    def __init__(self):
-        super().__init__("gruut-lang-ar")
-
-
-class UninstallGruutLangAr(LibraryUninstaller):
-    """Uninstalls gruut-lang-ar package from Blender's Python distribution."""
-    bl_idname = "script.uninstall_gruut_lang_ar"
-    bl_label = "Uninstall gruut-lang-ar"
-
-    def __init__(self):
-        super().__init__("gruut-lang-ar")
-
-class InstallGruutLangPt(LibraryInstaller):
-    """Installs gruut-lang-pt into Blender's Python distribution."""
-    bl_idname = "script.install_gruut_lang_pt"
-    bl_label = "Install gruut-lang-pt"
-
-    def __init__(self):
-        super().__init__("gruut-lang-pt")
-
-
-class UninstallGruutLangPt(LibraryUninstaller):
-    """Uninstalls gruut-lang-pt package from Blender's Python distribution."""
-    bl_idname = "script.uninstall_gruut_lang_pt"
-    bl_label = "Uninstall gruut-lang-pt"
-
-    def __init__(self):
-        super().__init__("gruut-lang-pt")
-
-class InstallGruutLangRu(LibraryInstaller):
-    """Installs gruut-lang-ru into Blender's Python distribution."""
-    bl_idname = "script.install_gruut_lang_ru"
-    bl_label = "Install gruut-lang-ru"
-
-    def __init__(self):
-        super().__init__("gruut-lang-ru")
-
-
-class UninstallGruutLangRu(LibraryUninstaller):
-    """Uninstalls gruut-lang-ru package from Blender's Python distribution."""
-    bl_idname = "script.uninstall_gruut_lang_ru"
-    bl_label = "Uninstall gruut-lang-ru"
-
-    def __init__(self):
-        super().__init__("gruut-lang-ru")
-        
-        
-        

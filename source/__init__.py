@@ -48,6 +48,8 @@ from .parrot_lipsync import InstallGruut
 from .parrot_lipsync import UninstallGruut
 from .parrot_lipsync import InstallGruutLangRu
 from .parrot_lipsync import UninstallGruutLangRu
+from .parrot_lipsync import InstallGruutLangPt
+from .parrot_lipsync import UninstallGruutLangPt
 
 
 
@@ -68,6 +70,8 @@ _classes=[
     UninstallGruut,
     InstallGruutLangRu,
     UninstallGruutLangRu,
+    InstallGruutLangPt,
+    UninstallGruutLangPt,
 ]
 
 _register, _unregister = bpy.utils.register_classes_factory(_classes)

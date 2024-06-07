@@ -436,10 +436,7 @@ def get_phonemes_from_file(context, seq):
                 word_list.append(word["text"])
                 word_list_info.append(word)
                 
-    #           print("word %s %f %f" % (word["text"], word["start"], word["end"]))
-                #word["text"]
-                #word["start"]
-                #word["end"]
+            #print("word %s %f %f" % (word["text"], word["start"], word["end"]))
         else:
             #https://jrgraphix.net/r/Unicode/
             #2E80 — 2EFF  	CJK Radicals Supplement
@@ -980,10 +977,14 @@ class ParrotAddonPreferences(bpy.types.AddonPreferences):
         #layout.prop(self, 'port')
           
         self.add_installer_button(context, layout, "whisper_timestamped")
+#        self.add_installer_button(context, layout, "phonemizer")
+#        self.add_installer_button(context, layout, "espeak_phonemizer")
         self.add_installer_button(context, layout, "gruut")
+
+#        self.add_installer_button(context, layout, "jphones")
         
-        box_single = layout.box()
-        box_single.label(text="Gruut language packs:")
+        box_gruut = layout.box()
+        box_gruut.label(text="Gruut language packs:")
 
         gruut_lang_packs = [
             ["Arabic", "gruut-lang-ar"],
@@ -1003,9 +1004,21 @@ class ParrotAddonPreferences(bpy.types.AddonPreferences):
         ]
 
         for tuple in gruut_lang_packs:
-            row = box_single.row()
+            row = box_gruut.row()
             row.label(text=tuple[0])
             self.add_installer_button(context, row, tuple[1])
+
+        # box_other = layout.box()
+        # box_other.label(text="Other languages:")
+
+        # other_lang_packs = [
+        #     ["Japanese", "jphones"],
+        # ]
+
+        # for tuple in other_lang_packs:
+        #     row = box_other.row()
+        #     row.label(text=tuple[0])
+        #     self.add_installer_button(context, row, tuple[1])
         
 
 class LibraryInstaller(bpy.types.Operator):

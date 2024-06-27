@@ -19,20 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-bl_info = {
-    "name": "Parrot Lipsync",
-    "author": "Mark McKay",
-    "version": (1, 0, 0),
-    "blender": (4, 0, 0),
-    "location": "View3D > Export > Mesh Exporter",
-    "description": "Generate lipsync tracks from audio files using Whisper AI.",
-    #"warning": "",
-    "doc_url": "https://github.com/blackears/parrotLipsync",
-    "category": "View 3D"
-}
-
-
-
 import subprocess
 import sys
 import os
@@ -170,16 +156,6 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
                ('bezier', 'bezier', 'bezier interpolation'),],
         default='bezier'
     )
-    # override_espeak_language_code: bpy.props.BoolProperty(
-        # name="Specify Espeak Language Code",
-        # description="If checked, Espeak will use the given code for phonemization.",
-        # default=False,
-    # )
-    # espeak_language_code: bpy.props.StringProperty(
-        # name="Language code",
-        # description="Use this to override the language used by the Espeak phonemizer.  'en-us' will work for all languages, although using a more language specific code will give better results for non-english languages.",
-        # default="en-us"
-    # )
     phoneme_table_path: bpy.props.StringProperty(
         name="Phoneme table file",
         default='//phoneme_table_en.json',
@@ -231,6 +207,18 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         min=0,
         max=1,
     ) 
+    limit_pps: bpy.props.BoolProperty(
+        name="Limit phonemes per second",
+        description="Drop extra phonemes if the go over the speed limit.",
+        default=False,
+    ) 
+    phonemes_per_second: bpy.props.FloatProperty(
+        name="Phonemes per second",
+        description="Drop extra phonemes when the phoneme rate goes over this limit.",
+        default=14,
+        min=0,
+        soft_max=10,
+    ) 
 
 #------------------------------------------
 # Panel
@@ -262,6 +250,12 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         row = main_column.row()
         row.enabled = not props.autodetect_language
         row.prop(props, "language_code")
+
+        main_column.prop(props, "limit_pps")
+        row = main_column.row()
+        row.enabled = props.limit_pps
+        row.prop(props, "phonemes_per_second")
+        
 
         # main_column.prop(props, "override_espeak_language_code")
         # row = main_column.row()
@@ -519,6 +513,8 @@ def render_lipsync_to_action(context, tgt_action, seq):
     attenuate_volume = props.attenuate_volume
     word_pad_frames = props.word_pad_frames
     silence_cutoff = props.silence_cutoff
+    limit_pps = props.limit_pps
+    phonemes_per_second = props.phonemes_per_second
 
     fps = context.scene.render.fps
 
@@ -539,7 +535,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
 
     phoneme_hash = {}
     for info in phoneme_table["phonemes"]:
-        print("Adding phoneme ", info)
+        #print("Adding phoneme ", info)
         phoneme_hash[info["code"]] = info
 
     #Map group names to pose actions
@@ -628,6 +624,29 @@ def render_lipsync_to_action(context, tgt_action, seq):
 
     #print("phoneme_timings ", phoneme_timings)
     
+    # Reduce phonemes
+    if limit_pps:
+        
+        last_phoneme_time = 0
+        last_group = None
+        new_timings = []
+        
+        for pt in phoneme_timings:
+            if pt["group"] == "rest":
+                new_timings.append(pt)
+                last_group = pt
+            elif last_group and last_group["group"] == pt["group"]:
+                continue
+            else:
+                if pt["time"] - last_phoneme_time >= 1.0 / phonemes_per_second:
+                    new_timings.append(pt)
+                    last_phoneme_time = pt["time"]
+                    last_group = pt
+        
+        phoneme_timings = new_timings
+        
+    
+    # Write phoneme keyframes
     for idx, phone_timing in enumerate(phoneme_timings):
         #print(phone_timing)
                         

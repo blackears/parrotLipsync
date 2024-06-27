@@ -4,8 +4,11 @@ import requests
 from urllib.parse import urlparse
 import os
 import os.path
+import sqlite3
+import whisper_timestamped
 
 cache_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../cache")
+word_database_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../words.db")
 
 libravox_pages = [
     "https://librivox.org/christmas-short-works-collection-2022-by-various/",
@@ -18,7 +21,7 @@ def download_libravox_webpage(url):
     reqs = requests.get(url)
     soup = BeautifulSoup(reqs.text, 'html.parser')
 
-    urls = []
+    #urls = []
     for link in soup.find_all('a'):
         page_link = link.get('href')
         if page_link.endswith(".mp3"):
@@ -48,6 +51,39 @@ def download_libravox_webpage(url):
                 
 #    print(source_audio_urls)
     return source_audio_urls
+
+
+def init_database():
+    con = sqlite3.connect(word_database_path)
+    
+    cur = con.cursor()
+    
+    res = cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='word'")
+    if res.fetchall()[0] == 0:
+        #Create table
+        cur.execute("CREATE TABLE word(index int, word text, phonemes text, source text, wave_data blob)")
+    
+    
+def process_audio(waveform, file_path):
+    con = sqlite3.connect(word_database_path)
+    
+    cur = con.cursor()
+    #Delete previous enties
+    cur.execute("DELETE FROM word WHERE source = '" + file_path + "'")
+    
+    
+
+def file_has_been_processed(file_path):
+    con = sqlite3.connect(word_database_path)
+    
+    cur = con.cursor()
+    #Delete previous enties
+    res = cur.execute("SELECT count(*) FROM word WHERE source = '" + file_path + "'")
+    print(res.fetchall())
+    return res.fetchall()[0] > 0
+    
+    
+
 
 for url in libravox_pages:
     download_libravox_webpage(url)

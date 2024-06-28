@@ -9,8 +9,8 @@ This is an addon for Blender that lets you automatically generate lip-synced dat
 
 ## Installation
 
-
 Parrot Lipsync relies on you having some other applications already installed on your computer.
+
 
 ### Install Ffmpeg
 
@@ -97,6 +97,8 @@ You can then configure various parameters:
 * Track volume multiplier - If checked, the volume of the track at a particular frame will be used to adjust the strength of this frame.  Can be used to make the mouth poses more extreme when the speaker is being loud and less extreme when the voice is quiet.
 * Auto detect language - Automatically determine the language being used by examining the audio data
 * Language code - You can specify the language code to be used here if `auto detect language` is not checked
+* Limit phonemes per second - If selected, will skip phonemes if they are more frequent than the phonemes per second rate.
+* Phonemes per second - When activated, will drop phonemes if they exceed this speed limit.  This can smooth out mouth movements.
 
 ### Lipsync Action Paramaters
 

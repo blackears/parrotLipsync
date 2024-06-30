@@ -5,7 +5,7 @@ This is an addon for Blender that lets you automatically generate lip-synced dat
 [![Video - overview](https://img.youtube.com/vi/VCXyHdBmBwQ/0.jpg)](https://www.youtube.com/watch?v=VCXyHdBmBwQ)
 
 
-[More videos](docs/video_index.md)
+[More videos](doc/video_index.md)
 
 
 ## Installation

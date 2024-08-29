@@ -11,3 +11,5 @@
 /examples/headless_example/*.blend1
 /examples/headless_example/headless_result.blend
 /compile_phoneme_db/cache
+/source/__pycache__
+/source/wheels

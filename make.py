@@ -34,25 +34,17 @@ def copytree(src, dst):
         else:
             filename, extn = os.path.splitext(item)
             print ("file " + filename + " extn  " + extn)
-            if (extn != ".py" and extn != ".png" and extn != ".json"):
+            if (extn != ".py" and extn != ".png" and extn != ".json" and extn != ".toml"):
                 continue
                 
             shutil.copy(s, d)
 
 def make(copyToBlenderAddons = False, createArchive = False):
     
-    blenderHome = None
-    # platSys = platform.system()
-    # if platSys == 'Windows':
-        # appData = os.getenv('APPDATA')
-        # blenderHome = os.path.join(appData, "Blender Foundation/Blender/2.92")
-        
-    # elif platSys == 'Linux':
-        # home = os.getenv('HOME')
-        # blenderHome = os.path.join(home, ".config/blender/2.92/")
+    blenderAddons = None
 
 
-    blenderHome = os.getenv('BLENDER_HOME')
+    blenderAddons = os.getenv('BLENDER_ADDONS')
 
     #Create build directory
     curPath = os.getcwd()
@@ -74,17 +66,17 @@ def make(copyToBlenderAddons = False, createArchive = False):
 
 
     if copyToBlenderAddons: 
-        if blenderHome == None:
-            print("Error: BLENDER_HOME not set.  Files not copied to <BLENDER_HOME>/script/addons.")
+        if blenderAddons == None:
+            print("Error: BLENDER_ADDONS not set.  Files not copied to <BLENDER_ADDONS>.")
             return
         
-        addonPath = os.path.join(blenderHome, "scripts/addons")
-        destPath = os.path.join(addonPath, projectName)
+        #addonPath = os.path.join(blenderHome, "scripts/addons")
+        destPath = os.path.join(blenderAddons, projectName)
 
-        print("Copying to blender addons: " + addonPath)
+        print("Copying to blender addons: " + destPath)
         if os.path.exists(destPath):
             shutil.rmtree(destPath)
-        copytree("build", addonPath);
+        copytree("build", blenderAddons);
 
 
 if __name__ == '__main__':

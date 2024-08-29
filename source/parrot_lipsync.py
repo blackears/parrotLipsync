@@ -40,17 +40,16 @@ import numpy as np
 import json
 
 
-# def install_whisper():
-    # python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
-    # target = os.path.join(sys.prefix, 'lib', 'site-packages')
-     
-    # subprocess.call([python_exe, '-m', 'ensurepip'])
-    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'pip'])
-
-    # #example package to install (SciPy):
-    # #subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'scipy', '-t', target])
-    # subprocess.call([python_exe, '-m', 'pip', 'install', '--upgrade', 'whisper-timestamped', '-t', target])
     
+def is_library_installed(lib_name) -> bool:
+    try:
+        # Blender does not add the user's site-packages/ directory by default.
+        sys.path.append(site.getusersitepackages())
+        return importlib.util.find_spec(lib_name.replace("-", "_")) is not None
+#        return importlib.util.find_spec(lib_name) is not None
+    finally:
+        sys.path.remove(site.getusersitepackages())
+            
 def update_phoneme_table_path(self, context):
     print("--update_phoneme_table_path")
     update_phoneme_group_pose_list(context)
@@ -840,7 +839,8 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
     
     def execute(self, context):
         for mod in ['whisper_timestamped', 'gruut']:
-            if not importlib.machinery.PathFinder().find_spec(mod):
+            if not is_library_installed(mod):
+#            if not importlib.machinery.PathFinder().find_spec(mod):
             #if not importlib.util.find_spec(mod):
                 self.report({"ERROR"}, mod + " not installed")
                 return {'CANCELLED'}
@@ -912,7 +912,7 @@ class PLUGIN_OT_ParrotRenderLipsyncToAction(bpy.types.Operator):
     
     def execute(self, context):
         for mod in ['whisper_timestamped', 'gruut']:
-            if not importlib.util.find_spec(mod):
+            if not is_library_installed(mod):
                 self.report({"ERROR"}, mod + " not installed")
                 return {'CANCELLED'}
             
@@ -972,17 +972,9 @@ class PLUGIN_OT_ParrotReloadPhonemeTable(bpy.types.Operator):
 class ParrotAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    # Returns true if whisper_timestamped has been installed.
-    def is_library_installed(self, lib_name) -> bool:
-        try:
-            # Blender does not add the user's site-packages/ directory by default.
-            sys.path.append(site.getusersitepackages())
-            return importlib.util.find_spec(lib_name.replace("-", "_")) is not None
-        finally:
-            sys.path.remove(site.getusersitepackages())
 
     def add_installer_button(self, context, layout, lib_name):
-        if self.is_library_installed(lib_name):
+        if is_library_installed(lib_name):
             op_props = layout.operator(LibraryUninstaller.bl_idname, text="Uninstall " + lib_name)
             op_props.lib_name = lib_name
         else:

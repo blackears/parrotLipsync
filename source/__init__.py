@@ -20,17 +20,17 @@
 # SOFTWARE.
 
 
-bl_info = {
-    "name": "Parrot Lipsync",
-    "author": "Mark McKay",
-    "version": (1, 0, 5),
-    "blender": (4, 0, 0),
-    "location": "View3D > Export > Mesh Exporter",
-    "description": "Generate lipsync tracks from audio files using Whisper AI.",
-    #"warning": "",
-    "doc_url": "https://github.com/blackears/parrotLipsync",
-    "category": "View 3D"
-}
+# bl_info = {
+    # "name": "Parrot Lipsync",
+    # "author": "Mark McKay",
+    # "version": (1, 0, 5),
+    # "blender": (4, 0, 0),
+    # "location": "View3D > Export > Mesh Exporter",
+    # "description": "Generate lipsync tracks from audio files using Whisper AI.",
+    # #"warning": "",
+    # "doc_url": "https://github.com/blackears/parrotLipsync",
+    # "category": "View 3D"
+# }
 
 import bpy
 from .parrot_lipsync import ParrotPoseProps
@@ -44,16 +44,6 @@ from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
 from .parrot_lipsync import ParrotAddonPreferences
 from .parrot_lipsync import LibraryInstaller
 from .parrot_lipsync import LibraryUninstaller
-# from .parrot_lipsync import InstallWhisper
-# from .parrot_lipsync import UninstallWhisper
-# from .parrot_lipsync import InstallGruut
-# from .parrot_lipsync import UninstallGruut
-# from .parrot_lipsync import InstallGruutLangAr
-# from .parrot_lipsync import UninstallGruutLangAr
-# from .parrot_lipsync import InstallGruutLangPt
-# from .parrot_lipsync import UninstallGruutLangPt
-# from .parrot_lipsync import InstallGruutLangRu
-# from .parrot_lipsync import UninstallGruutLangRu
 
 
 

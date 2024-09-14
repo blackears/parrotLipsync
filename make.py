@@ -15,68 +15,73 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import shutil
-import sys
 import getopt
 import platform
+import subprocess
+import pip
+import sys
+import os
+import shutil
 
-projectName = 'parrotLipsync'
+#projectName = 'kitfoxQuadRemesher'
 
-def copytree(src, dst):
-    for item in os.listdir(src):
-    
-        s = os.path.join(src, item)
-        d = os.path.join(dst, item)
-        if os.path.isdir(s):
-            os.mkdir(d)
-            copytree(s, d)
-        else:
-            filename, extn = os.path.splitext(item)
-            print ("file " + filename + " extn  " + extn)
-            if (extn != ".py" and extn != ".png" and extn != ".json" and extn != ".toml"):
-                continue
-                
-            shutil.copy(s, d)
+platforms = ["macosx_11_0_arm64", "manylinux_2_28_x86_64", "win_amd64", "manylinux_2_17_x86_64"]
+#platforms = ["macosx_11_0_arm64", "manylinux_2_17_x86_64", "win_amd64"]
 
-def make(copyToBlenderAddons = False, createArchive = False):
-    
-    blenderAddons = None
+python_modules = [
+#"pocketsphinx",
+"allosaurus",
+#"whisper_timestamped-1.15.4",
+#"whisper_timestamped", 
 
+# "gruut", 
+# "gruut-lang-ar",
+# "gruut-lang-cs",
+# "gruut-lang-de",
+# "gruut-lang-en",
+# "gruut-lang-es",
+# "gruut-lang-fa",
+# "gruut-lang-fr",
+# "gruut-lang-it",
+# "gruut-lang-lb",
+# "gruut-lang-nl",
+# "gruut-lang-pt",
+# "gruut-lang-ru",
+# "gruut-lang-sv",
+# "gruut-lang-sw",
+]
 
-    blenderAddons = os.getenv('BLENDER_ADDONS')
-
-    #Create build directory
+def build_wheels():
     curPath = os.getcwd()
-    if os.path.exists('build'):
-        shutil.rmtree('build')
-    os.mkdir('build')
-    os.mkdir('build/' + projectName)
-
-    copytree("source", "build/" + projectName);
-
+    if os.path.exists('source/wheels'):
+        shutil.rmtree('source/wheels')
+    os.mkdir('source/wheels')
     
-    #Build addon zip file
-    if createArchive: 
-        if os.path.exists('deploy'):
-            shutil.rmtree('deploy')
-        os.mkdir('deploy')
+    for plat in platforms:
+        for module in python_modules:
+            #pip.main(["download", module, "--dest", "source/wheels", "--only-binary=:all:", "--python-version=3.11", "--platform=" + plat])
 
-        shutil.make_archive("deploy/" + projectName, "zip", "build")
+#            subprocess.call(["pip", "wheel", "numba", "-w", "source/wheels2"])
+            subprocess.call(["python", "-m", "pip", "wheel", "--wheel-dir", "source/wheels", "--only-binary=:all:", module])
+            
 
+def build_extension():
+    curPath = os.getcwd()
+    if os.path.exists('extension'):
+        shutil.rmtree('extension')
+    os.mkdir('extension')
+    
+    subprocess.call(["blender", "--command", "extension", "build", "--split-platforms", "--source-dir", "source", "--output-dir", "extension"])
+ 
+#pip wheel numba -w .
+#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=macosx_11_0_arm64
+#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_28_x86_64
+#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64 --platform=macosx_11_0_arm64
 
-    if copyToBlenderAddons: 
-        if blenderAddons == None:
-            print("Error: BLENDER_ADDONS not set.  Files not copied to <BLENDER_ADDONS>.")
-            return
-        
-        #addonPath = os.path.join(blenderHome, "scripts/addons")
-        destPath = os.path.join(blenderAddons, projectName)
+#blender --command extension build --split-platforms
 
-        print("Copying to blender addons: " + destPath)
-        if os.path.exists(destPath):
-            shutil.rmtree(destPath)
-        copytree("build", blenderAddons);
+def install_extension():
+    subprocess.call(["blender", "--command", "extension", "install-file", "--enable", "--repo", "user_default",  "extension/kitfox_quad_remesher-1.0.0-windows_x64.zip"])
 
 
 if __name__ == '__main__':
@@ -84,10 +89,11 @@ if __name__ == '__main__':
     createArchive = False
 
     for arg in sys.argv[1:]:
-        if arg == "-a":
-            createArchive = True
-        if arg == "-b":
-            copyToBlenderAddons = True
+        if arg == "-w":
+            build_wheels()
+        if arg == "-e":
+            build_extension()
+        if arg == "-i":
+            install_extension()
 
-    make(copyToBlenderAddons, createArchive)
             

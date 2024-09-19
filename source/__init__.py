@@ -41,9 +41,9 @@ from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncSetupPanel
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToAction
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToRigNla
 from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
-from .parrot_lipsync import ParrotAddonPreferences
-from .parrot_lipsync import LibraryInstaller
-from .parrot_lipsync import LibraryUninstaller
+#from .parrot_lipsync import ParrotAddonPreferences
+#from .parrot_lipsync import LibraryInstaller
+#from .parrot_lipsync import LibraryUninstaller
 
 
 
@@ -57,19 +57,9 @@ _classes=[
     PLUGIN_OT_ParrotRenderLipsyncToAction,
     PLUGIN_OT_ParrotRenderLipsyncToRigNla,
     PLUGIN_OT_ParrotReloadPhonemeTable,
-    ParrotAddonPreferences,
-    LibraryInstaller,
-    LibraryUninstaller,
-    # InstallWhisper,
-    # UninstallWhisper,
-    # InstallGruut,
-    # UninstallGruut,
-    # InstallGruutLangAr,
-    # UninstallGruutLangAr,
-    # InstallGruutLangPt,
-    # UninstallGruutLangPt,
-    # InstallGruutLangRu,
-    # UninstallGruutLangRu,
+#    ParrotAddonPreferences,
+#    LibraryInstaller,
+#    LibraryUninstaller,
 ]
 
 _register, _unregister = bpy.utils.register_classes_factory(_classes)

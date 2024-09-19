@@ -51,7 +51,23 @@ python_modules = [
 # "gruut-lang-sw",
 ]
 
+#pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_arm64
+#pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_x86_64
+
+#pip download torch --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_11_0_arm64
+#pip download editdistance --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_11_0_arm64
+
+def print_wheel_list():
+    for f in os.listdir("source/wheels"):
+        filename = os.fsdecode(f)
+        print("    \"./wheels/" + filename.strip() + "\",")
+
 def build_wheels():
+    if True:
+        #Currently not working
+        #https://projects.blender.org/blender/blender/issues/127632
+        return
+    
     curPath = os.getcwd()
     if os.path.exists('source/wheels'):
         shutil.rmtree('source/wheels')
@@ -81,7 +97,7 @@ def build_extension():
 #blender --command extension build --split-platforms
 
 def install_extension():
-    subprocess.call(["blender", "--command", "extension", "install-file", "--enable", "--repo", "user_default",  "extension/kitfox_quad_remesher-1.0.0-windows_x64.zip"])
+    subprocess.call(["blender", "--command", "extension", "install-file", "--enable", "--repo", "user_default",  "extension/parrot_lipsync-1.1.0-windows_x64.zip"])
 
 
 if __name__ == '__main__':
@@ -91,6 +107,8 @@ if __name__ == '__main__':
     for arg in sys.argv[1:]:
         if arg == "-w":
             build_wheels()
+        if arg == "-l":
+            print_wheel_list()
         if arg == "-e":
             build_extension()
         if arg == "-i":

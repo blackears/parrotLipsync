@@ -19,16 +19,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import bpy
 import subprocess
 import sys
 import os
-import bpy
 import site
 import hashlib
 import importlib
 import itertools
 import mathutils
 import numpy as np
+from allosaurus.app import read_recognizer
+import random
+import base64
+
 
 # import whisper_timestamped as whisper
 
@@ -218,6 +222,13 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         min=0,
         soft_max=10,
     ) 
+    rest_gap: bpy.props.FloatProperty(
+        name="Rest gap",
+        description="Pauses between phonemes greater than this many seconds will cause the rest pose to be used.",
+        default=.2,
+        min=0,
+        soft_max=2,
+    ) 
 
 #------------------------------------------
 # Panel
@@ -237,19 +248,21 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         main_column = layout.column()
 
 #        main_column.prop(props, "espeak_path")
-        main_column.prop(props, "whisper_library_model")
+#        main_column.prop(props, "whisper_library_model")
         main_column.prop(props, "phoneme_table_path")
-        main_column.prop(props, "key_interpolation")
-        main_column.prop(props, "silence_cutoff")
-        main_column.prop(props, "word_pad_frames")
-        main_column.prop(props, "attenuation")
-        main_column.prop(props, "attenuate_volume")
+        # main_column.prop(props, "key_interpolation")
+        # main_column.prop(props, "silence_cutoff")
+        # main_column.prop(props, "word_pad_frames")
+        # main_column.prop(props, "attenuation")
+        # main_column.prop(props, "attenuate_volume")
 
-        main_column.prop(props, "autodetect_language")        
-        row = main_column.row()
-        row.enabled = not props.autodetect_language
-        row.prop(props, "language_code")
+        # main_column.prop(props, "autodetect_language")        
+        # row = main_column.row()
+        # row.enabled = not props.autodetect_language
+        # row.prop(props, "language_code")
 
+        main_column.prop(props, "rest_gap")
+        
         main_column.prop(props, "limit_pps")
         row = main_column.row()
         row.enabled = props.limit_pps
@@ -330,20 +343,6 @@ class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
         main_column.operator("parrot.install_gruut")
 
 
-# valid_espeak_codes = ['af', 'am', 'an', 'as', 'az', 'ba', 'be', 'bg', 'bn', 'bpy', 'bs', 'ca', 'chr-US-Qaaa-x-west', 'cmn', 'cmn-latn-pinyin', 'cv', 'cy', 'da', 'de', 'en-us', 'en-029', 'en-gb', 'en-gb-scotland', 'en-gb-x-gbclan', 'en-gb-x-gbcwmd', 'en-gb-x-rp', 'en-us-nyc', 'eo', 'es', 'es-419', 'et', 'eu', 'fa', 'fa-latn', 'fi', 'fr-fr', 'fr-be', 'fr-ch', 'ga', 'gd', 'gn', 'grc', 'gu', 'hak', 'haw', 'he', 'hr', 'ht', 'hu', 'hy', 'hyw', 'ia', 'id', 'io', 'is', 'it', 'jbo', 'ka', 'kk', 'kl', 'kn', 'ko', 'kok', 'ku', 'ky', 'la', 'lb', 'lfn', 'lt', 'ltg', 'lv', 'mi', 'mk', 'ml', 'mr', 'mt', 'my', 'nb', 'nci', 'ne', 'nl', 'nog', 'om', 'or', 'pa', 'pap', 'piqd', 'pl', 'pt', 'pt-br', 'py', 'qdb', 'qu', 'quc', 'qya', 'ro', 'ru', 'ru-lv', 'sd', 'shn', 'si', 'sjn', 'sk', 'sl', 'smj', 'sq', 'sr', 'sv', 'sw', 'ta', 'te', 'th', 'tk', 'tn', 'tr', 'tt', 'ug', 'uk', 'ur', 'uz', 'vi', 'vi-vn-x-central', 'vi-vn-x-south', 'yue']
-
-# def get_espeak_lang_code(context, lang_code):
-    # props = context.scene.props
-    
-    # if props.override_espeak_language_code:
-        # return props.espeak_language_code
-
-    # codes = [code for code in valid_espeak_codes if code.startswith(lang_code)]
-    # if len(codes) > 0:
-        # return codes[0]
-
-    # return "en-us"
-
         
         
 #------------------------------------------
@@ -372,9 +371,55 @@ def max_values_in_partitions(arr, n):
     # Calculate the maximum value along each row (axis=1) and return the result
     return np.max(partitions, axis=1)
 
+
+allosaurus_model = None
+
+#Parse audio track to phonemes
+def get_phonemes_from_audio(context, seq):
+    props = context.scene.props
+
+    global allosaurus_model
+    if not allosaurus_model:
+        allosaurus_model = read_recognizer("latest")
+    
+    sourcepath = bpy.path.abspath(seq.sound.filepath)
+    filepath_wav = sourcepath
+    
+    temp_file = None
+    
+    if not filepath_wav.endswith(".wav"):
+        filename, extn = os.path.splitext(filepath_wav)
+
+        key = base64.urlsafe_b64encode(random.randbytes(16)).decode("utf-8")[:-2]
+        newpath = filename + "_" + key + '.wav'
+        temp_file = newpath
+        
+        subprocess.call(['ffmpeg', '-y', '-i', filepath_wav, newpath])
+        filepath_wav = newpath
+    
+    token = allosaurus_model.recognize(filepath_wav, timestamp=True)
+
+    if temp_file:
+        os.remove(temp_file)
+
+    #token now has the parsed phoneme data
+    print(token)
+    
+    phone_list = []
+    for t in token.splitlines():
+        time, dur, phone = t.split(" ")
+        phone_list.append({
+            "time": float(time), 
+            "dur": float(dur), 
+            "phone": phone
+        })
+
+    return phone_list
+
+
 use_cached_dialog = True
 
-def get_phonemes_from_file(context, seq):
+def get_phonemes_from_audio_old(context, seq):
     #Putting imports here to avoid these libraries slowing down Blender loading addons
     import whisper_timestamped as whisper
 
@@ -503,9 +548,103 @@ def get_or_create_fcurve(tgt_action, data_path, array_index, group):
     return tgt_curve
 
 def render_lipsync_to_action(context, tgt_action, seq):
-
     props = context.scene.props
     
+    key_interpolation = props.key_interpolation
+    attenuation = props.attenuation
+    #attenuate_volume = props.attenuate_volume
+    #word_pad_frames = props.word_pad_frames
+    #silence_cutoff = props.silence_cutoff
+    limit_pps:bool = props.limit_pps
+    phonemes_per_second:float = props.phonemes_per_second
+    rest_gap:float = props.rest_gap
+
+    fps = context.scene.render.fps
+    
+    phone_list = get_phonemes_from_audio(context, seq)
+    if len(phone_list) == 0:
+        return
+
+    #Throw out extra phonemes
+    if limit_pps:
+        sec_per_phone = 1 / phonemes_per_second
+        new_phone_list = []
+        last_phone_time:float = 0
+        
+        for phone in phone_list:
+            if not new_phone_list:
+                new_phone_list.append(phone)
+                last_phone_time = phone["time"]
+            elif phone["time"] - last_phone_time > sec_per_phone:
+                new_phone_list.append(phone)
+                last_phone_time = phone["time"]
+        
+        phone_list = new_phone_list
+
+    #Make sure phone table is up to date
+    update_phoneme_group_pose_list(context)
+    
+
+    tgt_action.fcurves.clear()
+    for marker in tgt_action.pose_markers.values():
+        tgt_action.pose_markers.remove(marker)
+
+    phoneme_table = load_phoneme_table(context)
+
+    #Map phone codes to phoneme table entries
+    phoneme_hash:dict[str, dict] = {}
+    for info in phoneme_table["phonemes"]:
+        #print("Adding phoneme ", info)
+        phoneme_hash[info["code"]] = info
+
+    #Map group names to pose actions
+    group_pose_hash:Dict[str, bpy.props.PointerProperty] = {}
+    for pose_props in props.phoneme_poses:
+        group_pose_hash[pose_props.group] = pose_props.pose
+
+    seq_time_start = seq.frame_offset_start / fps
+    seq_time_end = (seq.frame_offset_start + seq.frame_final_duration) / fps
+
+    #Convert phonemes to phone groups and add rests
+    groups_seq:[dict] = []
+
+    groups_seq.append({"rest", phone_list[0]["time"] - rest_gap})
+    
+    for phone_idx in range(len(phone_list) - 2):
+        p0 = phone_list[phone_idx]
+        p1 = phone_list[phone_idx + 1]
+        
+        phone = p0["phone"]
+        if phone in phoneme_hash:
+            groups_seq.append({phoneme_hash[phone]["group"], p0["time"]})
+        else:
+            print("missing phoneme:", phone)
+        
+        gap = p1["time"] - p0["time"]
+        
+        if gap > rest_gap * 2:
+            groups_seq.append({"rest", p0["time"] + rest_gap})
+            groups_seq.append({"rest", p1["time"] - rest_gap})
+        elif gap > rest_gap:
+            groups_seq.append({"rest", (p0["time"] + p1["time"]) / 2})
+            
+    phone = phone_list[-1]["phone"]
+    if phone in phoneme_hash:
+        groups_seq.append({phoneme_hash[phone]["group"], phone_list[-1]["time"]})
+    else:
+        print("missing phoneme:", phone)
+    groups_seq.append({"rest", phone_list[-1]["time"] + rest_gap})
+            
+    print("---Group seq")
+    print(groups_seq)
+    
+    #Create tracks
+    
+    
+
+def render_lipsync_to_action_old(context, tgt_action, seq):
+
+    props = context.scene.props
     
     key_interpolation = props.key_interpolation
     attenuation = props.attenuation
@@ -522,7 +661,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
     #print("Parsing track: ", seq.name)        
     
     phoneme_timings = []
-    word_list_info, phoneme_word_list, sound_profile = get_phonemes_from_file(context, seq)
+    word_list_info, phoneme_word_list, sound_profile = get_phonemes_from_audio(context, seq)
 
     update_phoneme_group_pose_list(context)
     
@@ -548,6 +687,8 @@ def render_lipsync_to_action(context, tgt_action, seq):
     #print("seq_time_start ", seq_time_start, " seq_time_end ", seq_time_end)
     #final_word = None
     
+    
+    #################
     for pw_idx, pw_word in enumerate(phoneme_word_list):
         word = word_list_info[pw_idx]
         #print("word ", word)

@@ -104,7 +104,7 @@ def load_phoneme_table(context):
 
     with open(abs_path) as f:
         phoneme_table = json.load(f)
-#        print("phoneme_table: ", phoneme_table)
+        #print("phoneme_table: ", phoneme_table)
         return phoneme_table
 
 #------------------------------------------
@@ -250,7 +250,7 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
 #        main_column.prop(props, "espeak_path")
 #        main_column.prop(props, "whisper_library_model")
         main_column.prop(props, "phoneme_table_path")
-        # main_column.prop(props, "key_interpolation")
+        main_column.prop(props, "key_interpolation")
         # main_column.prop(props, "silence_cutoff")
         # main_column.prop(props, "word_pad_frames")
         # main_column.prop(props, "attenuation")
@@ -267,13 +267,6 @@ class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
         row = main_column.row()
         row.enabled = props.limit_pps
         row.prop(props, "phonemes_per_second")
-        
-
-        # main_column.prop(props, "override_espeak_language_code")
-        # row = main_column.row()
-        # row.enabled = props.override_espeak_language_code
-        # row.prop(props, "espeak_language_code")
-
 
         box_single = main_column.box()
         box_single.prop(props, "lipsync_action")
@@ -551,10 +544,6 @@ def render_lipsync_to_action(context, tgt_action, seq):
     props = context.scene.props
     
     key_interpolation = props.key_interpolation
-    attenuation = props.attenuation
-    #attenuate_volume = props.attenuate_volume
-    #word_pad_frames = props.word_pad_frames
-    #silence_cutoff = props.silence_cutoff
     limit_pps:bool = props.limit_pps
     phonemes_per_second:float = props.phonemes_per_second
     rest_gap:float = props.rest_gap
@@ -585,10 +574,6 @@ def render_lipsync_to_action(context, tgt_action, seq):
     update_phoneme_group_pose_list(context)
     
 
-    tgt_action.fcurves.clear()
-    for marker in tgt_action.pose_markers.values():
-        tgt_action.pose_markers.remove(marker)
-
     phoneme_table = load_phoneme_table(context)
 
     #Map phone codes to phoneme table entries
@@ -598,7 +583,7 @@ def render_lipsync_to_action(context, tgt_action, seq):
         phoneme_hash[info["code"]] = info
 
     #Map group names to pose actions
-    group_pose_hash:Dict[str, bpy.props.PointerProperty] = {}
+    group_pose_hash:dict[str, bpy.props.PointerProperty] = {}
     for pose_props in props.phoneme_poses:
         group_pose_hash[pose_props.group] = pose_props.pose
 
@@ -608,39 +593,97 @@ def render_lipsync_to_action(context, tgt_action, seq):
     #Convert phonemes to phone groups and add rests
     groups_seq:[dict] = []
 
-    groups_seq.append({"rest", phone_list[0]["time"] - rest_gap})
+    groups_seq.append(["rest", phone_list[0]["time"] - rest_gap])
     
+    list_size = len(phone_list) - 2
     for phone_idx in range(len(phone_list) - 2):
         p0 = phone_list[phone_idx]
         p1 = phone_list[phone_idx + 1]
         
         phone = p0["phone"]
         if phone in phoneme_hash:
-            groups_seq.append({phoneme_hash[phone]["group"], p0["time"]})
+            groups_seq.append([phoneme_hash[phone]["group"], p0["time"]])
         else:
             print("missing phoneme:", phone)
         
         gap = p1["time"] - p0["time"]
         
         if gap > rest_gap * 2:
-            groups_seq.append({"rest", p0["time"] + rest_gap})
-            groups_seq.append({"rest", p1["time"] - rest_gap})
+            groups_seq.append(["rest", p0["time"] + rest_gap])
+            groups_seq.append(["rest", p1["time"] - rest_gap])
         elif gap > rest_gap:
-            groups_seq.append({"rest", (p0["time"] + p1["time"]) / 2})
+            groups_seq.append(["rest", (p0["time"] + p1["time"]) / 2])
             
     phone = phone_list[-1]["phone"]
     if phone in phoneme_hash:
-        groups_seq.append({phoneme_hash[phone]["group"], phone_list[-1]["time"]})
+        groups_seq.append([phoneme_hash[phone]["group"], phone_list[-1]["time"]])
     else:
         print("missing phoneme:", phone)
     groups_seq.append({"rest", phone_list[-1]["time"] + rest_gap})
             
-    print("---Group seq")
-    print(groups_seq)
+    #print("---Group seq")
+    #print(groups_seq)
     
-    #Create tracks
-    
-    
+
+    #Clear existing animation
+    tgt_action.fcurves.clear()
+    for marker in tgt_action.pose_markers.values():
+        tgt_action.pose_markers.remove(marker)
+
+    #Write tracks
+    for idx, phone_timing in enumerate(groups_seq):
+        #print(phone_timing)
+                        
+        group_name, time = phone_timing
+        #print("group_name " , group_name)
+        if not group_name in group_pose_hash:
+            continue
+        
+        src_action = group_pose_hash[group_name]
+        if not src_action:
+            continue
+
+        marker = tgt_action.pose_markers.new(group_name)
+        marker.frame = int(time * fps)
+        
+        #Ensure groups are present
+        for src_group in src_action.groups:
+            if not src_group.name in tgt_action.groups:
+                tgt_action.groups.new(src_group.name)
+
+
+        for src_curve in src_action.fcurves:
+            #print("src_curve.data_path ", src_curve.data_path, src_curve.array_index)
+            
+            if src_curve.is_empty:
+                continue
+
+            tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
+            if not tgt_curve:
+                tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+                if src_curve.group:
+                    tgt_curve.group = tgt_action.groups[src_curve.group.name]
+            
+            frame_range = src_action.curve_frame_range
+            #print("range ", range)
+            for src_kf in src_curve.keyframe_points:
+
+                tgt_kf = tgt_curve.keyframe_points.insert(frame = (src_kf.co[0] - frame_range[0] + int(time * fps)), value = src_kf.co[1])
+                
+                tgt_kf.interpolation = src_kf.interpolation
+                if key_interpolation == "constant":
+                    tgt_kf.interpolation = 'CONSTANT'
+                elif key_interpolation == "linear":
+                    tgt_kf.interpolation = 'LINEAR'
+                elif key_interpolation == "bezier":
+                    tgt_kf.interpolation = 'BEZIER'
+                    
+                tgt_kf.easing = src_kf.easing
+                tgt_kf.handle_left = src_kf.handle_left
+                tgt_kf.handle_right = src_kf.handle_right
+                tgt_kf.period = src_kf.period
+
+
 
 def render_lipsync_to_action_old(context, tgt_action, seq):
 
@@ -688,7 +731,6 @@ def render_lipsync_to_action_old(context, tgt_action, seq):
     #final_word = None
     
     
-    #################
     for pw_idx, pw_word in enumerate(phoneme_word_list):
         word = word_list_info[pw_idx]
         #print("word ", word)
@@ -785,6 +827,7 @@ def render_lipsync_to_action_old(context, tgt_action, seq):
         
         phoneme_timings = new_timings
         
+    #################
     
     # Write phoneme keyframes
     for idx, phone_timing in enumerate(phoneme_timings):

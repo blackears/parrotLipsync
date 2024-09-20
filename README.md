@@ -136,6 +136,25 @@ The `groups` section defines each mouth position that your animation will use.  
 The `phonemes` section is where you let Parrot know which phoneme symbols belong to which group.  The `code` field is the International Phonetic Alphabetic code for the syllable and the `group` field indicates which mouth pose group the syllable belongs to.  The `class` and `example` fields are not currently used by Parrot but meant to provide usage hints to the user and might be used in a future version of Parrot.
 
 
+## Building
+
+A `make.py` file is included in the root directory.  You must have downloaded the necessary wheels and put them in `./source/wheels` first.  (The wheels are not included in this repo because they are several gigabytes in size all together and some are platform specific.)  You must also have Blender 4.2 or higher installed and in your path.  
+
+The Parrot Lipsync extension can be built by being in the root directory and running the command
+
+```python ./make.py -e```
+
+This will place the built zipfiles in the `./extensions` directory.
+
+### Getting the wheels
+
+A wheel is an archive of a python module that can be imported into a Python program.  Since Blender 4.2, all necessary wheels must be bundled with the extension.  Since Parrot uses artificial intelligence, it requires several big wheels.  If you run the make file with the `-w` flag, it will download the wheels necessary for the platform you are running on.  
+
+```python ./make.py -w```
+
+There is currently no way (that I know of) to download the wheels for a different platform, but if you want the wheels for platforms other than the one you are building on, you can run the script on those other platforms and then copy the downloaded wheels into your `./source/wheels` directory.
+
+
 ## Acknowledgements
 
 allosaurus

@@ -58,15 +58,9 @@ You can then configure various parameters:
 
 ### General Parameters
 
-* Whisper library - Language library Whisper uses for AI translation
 * Phoneme Table - Table used to map phonemes to mouth poses
 * Key interpolation - Way to interpolate between mouth poses.  It is recommended that you use `bezier` for 3D and `constant` for keyframe animation.
-* Silence cutoff - During processing, a frame is considered to be silent if the audio track is below this value for the entire frame.  Used to positioning of words.
-* Word pad frames - The number of frames to pad at the begining and end of words before placing a `rest` pose.
-* Strength multiplier - Pose stength is multiplied buy this value.  Set to less than 1 to soften the animation.
-* Track volume multiplier - If checked, the volume of the track at a particular frame will be used to adjust the strength of this frame.  Can be used to make the mouth poses more extreme when the speaker is being loud and less extreme when the voice is quiet.
-* Auto detect language - Automatically determine the language being used by examining the audio data
-* Language code - You can specify the language code to be used here if `auto detect language` is not checked
+* Rest Gap - If two phonemes are separated by a more than this many seconds, add rest poses to indicate a closed mouth.
 * Limit phonemes per second - If selected, will skip phonemes if they are more frequent than the phonemes per second rate.
 * Phonemes per second - When activated, will drop phonemes if they exceed this speed limit.  This can smooth out mouth movements.
 

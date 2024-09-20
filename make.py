@@ -15,76 +15,106 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import shutil
-import sys
 import getopt
 import platform
+import subprocess
+import pip
+import sys
+import os
+import shutil
 
-projectName = 'parrotLipsync'
+#projectName = 'kitfoxQuadRemesher'
 
-def copytree(src, dst):
-    for item in os.listdir(src):
+platforms = ["macosx_11_0_arm64", "manylinux_2_28_x86_64", "win_amd64", "manylinux_2_17_x86_64"]
+#platforms = ["macosx_11_0_arm64", "manylinux_2_17_x86_64", "win_amd64"]
+
+python_modules = [
+#"pocketsphinx",
+"allosaurus",
+#"whisper_timestamped-1.15.4",
+#"whisper_timestamped", 
+
+# "gruut", 
+# "gruut-lang-ar",
+# "gruut-lang-cs",
+# "gruut-lang-de",
+# "gruut-lang-en",
+# "gruut-lang-es",
+# "gruut-lang-fa",
+# "gruut-lang-fr",
+# "gruut-lang-it",
+# "gruut-lang-lb",
+# "gruut-lang-nl",
+# "gruut-lang-pt",
+# "gruut-lang-ru",
+# "gruut-lang-sv",
+# "gruut-lang-sw",
+]
+
+# wheels_no_deps = [
+    # "allosaurus", "resampy", "panphon", "requests", "tqdm",    
+    # "filelock", "fsspec", "jinja2", "mpmath", "munkres", "networkx", "panphon", 
+# ]
+
+# wheels_bin = [
+    # "scipy", "torch", "editdistance", 
+    # "editdistance", "llvmlite", "MarkupSafe", "numba", 
+# ]
+
+# wheels_bin = [
+    # ["allosaurus", "--no-deps", "macosx_14_0_arm64"],
+    # ["scipy", "--only-binary=:all:", "macosx_14_0_arm64"],
+# ]
+
+#https://files.pythonhosted.org/packages/07/85/3ef1d2f70736bef5650c7fedbf4d4e01efe728f10bad0294a9a8d396ff00/allosaurus-1.0.2-py3-none-any.whl
+
+#pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_arm64
+#pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_x86_64
+
+#pip download torch --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_11_0_arm64
+#pip download editdistance --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_11_0_arm64
+
+def print_wheel_list():
+    for f in os.listdir("source/wheels"):
+        filename = os.fsdecode(f)
+        print("    \"./wheels/" + filename.strip() + "\",")
+
+def build_wheels():
+    if True:
+        #Currently not working
+        #https://projects.blender.org/blender/blender/issues/127632
+        return
     
-        s = os.path.join(src, item)
-        d = os.path.join(dst, item)
-        if os.path.isdir(s):
-            os.mkdir(d)
-            copytree(s, d)
-        else:
-            filename, extn = os.path.splitext(item)
-            print ("file " + filename + " extn  " + extn)
-            if (extn != ".py" and extn != ".png" and extn != ".json"):
-                continue
-                
-            shutil.copy(s, d)
-
-def make(copyToBlenderAddons = False, createArchive = False):
-    
-    blenderHome = None
-    # platSys = platform.system()
-    # if platSys == 'Windows':
-        # appData = os.getenv('APPDATA')
-        # blenderHome = os.path.join(appData, "Blender Foundation/Blender/2.92")
-        
-    # elif platSys == 'Linux':
-        # home = os.getenv('HOME')
-        # blenderHome = os.path.join(home, ".config/blender/2.92/")
-
-
-    blenderHome = os.getenv('BLENDER_HOME')
-
-    #Create build directory
     curPath = os.getcwd()
-    if os.path.exists('build'):
-        shutil.rmtree('build')
-    os.mkdir('build')
-    os.mkdir('build/' + projectName)
-
-    copytree("source", "build/" + projectName);
-
+    if os.path.exists('source/wheels'):
+        shutil.rmtree('source/wheels')
+    os.mkdir('source/wheels')
     
-    #Build addon zip file
-    if createArchive: 
-        if os.path.exists('deploy'):
-            shutil.rmtree('deploy')
-        os.mkdir('deploy')
+    for plat in platforms:
+        for module in python_modules:
+            #pip.main(["download", module, "--dest", "source/wheels", "--only-binary=:all:", "--python-version=3.11", "--platform=" + plat])
 
-        shutil.make_archive("deploy/" + projectName, "zip", "build")
+            subprocess.call(["pip", module, "numba", "-w", "source/wheels2"])
+#            subprocess.call(["python", "-m", "pip", "wheel", "--wheel-dir", "source/wheels", "--only-binary=:all:", module])
+            
 
+def build_extension():
+    curPath = os.getcwd()
+    if os.path.exists('extension'):
+        shutil.rmtree('extension')
+    os.mkdir('extension')
+    
+    subprocess.call(["blender", "--command", "extension", "build", "--split-platforms", "--source-dir", "source", "--output-dir", "extension"])
+ 
+#pip wheel numba -w .
+#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=macosx_11_0_arm64
+#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_28_x86_64
+#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64 --platform=macosx_11_0_arm64
 
-    if copyToBlenderAddons: 
-        if blenderHome == None:
-            print("Error: BLENDER_HOME not set.  Files not copied to <BLENDER_HOME>/script/addons.")
-            return
-        
-        addonPath = os.path.join(blenderHome, "scripts/addons")
-        destPath = os.path.join(addonPath, projectName)
+#blender --command extension build --split-platforms
 
-        print("Copying to blender addons: " + addonPath)
-        if os.path.exists(destPath):
-            shutil.rmtree(destPath)
-        copytree("build", addonPath);
+def install_extension():
+    subprocess.call(["blender", "--command", "extension", "install-file", "--enable", "--repo", "user_default",  "extension/parrot_lipsync-1.1.0-windows_x64.zip"])
 
 
 if __name__ == '__main__':
@@ -92,10 +122,13 @@ if __name__ == '__main__':
     createArchive = False
 
     for arg in sys.argv[1:]:
-        if arg == "-a":
-            createArchive = True
-        if arg == "-b":
-            copyToBlenderAddons = True
+        if arg == "-w":
+            build_wheels()
+        if arg == "-l":
+            print_wheel_list()
+        if arg == "-e":
+            build_extension()
+        if arg == "-i":
+            install_extension()
 
-    make(copyToBlenderAddons, createArchive)
             

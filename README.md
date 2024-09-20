@@ -1,6 +1,6 @@
 # Parrot Automatic Lipsync for Blender
 
-This is an addon for Blender that lets you automatically generate lip-synced data from audio tracks.  It can be used for both 2D and 3D animations and supports many common languages.  It uses OpenAI's Whisper library to turn spoken audio tracks into words, and then Gruut to turn words into phonemes to create the key frames for your mouth positions.
+Parrot Lipsync is an extension for Blender that lets you automatically generate lip-synced data from audio tracks.  It can be used for both 2D and 3D animations and supports many common languages.  It uses the `allosaurus` library to turn spoken audio tracks into phonemes which are then used to key frame your mouth positions.
 
 [![Video - overview](https://img.youtube.com/vi/VCXyHdBmBwQ/0.jpg)](https://www.youtube.com/watch?v=VCXyHdBmBwQ)
 
@@ -10,12 +10,12 @@ This is an addon for Blender that lets you automatically generate lip-synced dat
 
 ## Installation
 
-Parrot Lipsync relies on you having some other applications already installed on your computer.
+Parrot Lipsync relies on you having `ffmpeg` already installed on your computer.
 
 
 ### Install Ffmpeg
 
-Ffmpeg is a popular library that lets you read and write many popular media files.  It needs to be accessible from the command line.
+[Ffmpeg](https://ffmpeg.org/) is a popular library that lets you read and write many audio/video files.  It needs to be accessible from the command line.
 
 Open a command prompt and type the following to see if it is already installed:
 
@@ -43,41 +43,10 @@ scoop install ffmpeg
 ```
 
 
-### Installing the Parrot Lipsync addon
+### Installing the Parrot Lipsync extension
 
-Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Preferences > Addons` window and clicking the `Install` button.  Browse to the Parrot Lipsync zip file you downloaded and select it.  Finally, make sure the check mark next to `View 3D: Parrot Lipsync` is checked so that the addon is activated.
+Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Preferences > Addons` tab, clicking the downward pointing arrow button in the top right corner and selecting `Install from Disk...`.  Browse to the Parrot Lipsync zip file you downloaded and select it.  Finally, make sure the check mark next to `View 3D: Parrot Lipsync` is checked so that the extension is activated.
 
-### Install Whisper and Gruut
-
-Parrot needs some support libraries to function.  The easiest way to install them is to open Parrot's configuration page in the `Addon` window to reveal the buttons on the bottom.  Press the `Install whisper_timestamped` and `Install gruut` buttons to ensure these necessary libraries are added to your Blender's python packages.  Some languages will require an additional package - for example, if you intend to use the Russian language, make sure to click the `Install gruut-lang-ru` button as well.
-
-![Addon install panel](doc/addon_install_panel.jpg)
-
-
-### Alternate installation procedure for Whisper and Gruut
-
-It is also possible to install Whsiper and Gruut on the command line as well if you don't want to use the installation panel.
-
-Open a terminal window and go into your Blender installation's python directory (on Windows it should be something like `C:\Program Files\Blender Foundation\Blender 4.0\4.0\python\bin`).  Then issue the following commands:
-
-```
-./python.exe -m pip install --upgrade whisper_timestamped
-./python.exe -m pip install --upgrade gruut
-```
-
-For MacOS and Linux, the following should work:
-
-```
-./python -m pip install --upgrade whisper_timestamped
-./python -m pip install --upgrade gruut
-```
-
-Some languages will require additional packages to be installed:
-
-```
-Russian:
-./python.exe -m pip install --upgrade gruut-lang-ru
-```
 
 ## Usage
 
@@ -167,13 +136,29 @@ The `groups` section defines each mouth position that your animation will use.  
 The `phonemes` section is where you let Parrot know which phoneme symbols belong to which group.  The `code` field is the International Phonetic Alphabetic code for the syllable and the `group` field indicates which mouth pose group the syllable belongs to.  The `class` and `example` fields are not currently used by Parrot but meant to provide usage hints to the user and might be used in a future version of Parrot.
 
 
+## Building
+
+A `make.py` file is included in the root directory.  You must have downloaded the necessary wheels and put them in `./source/wheels` first.  (The wheels are not included in this repo because they are several gigabytes in size all together and some are platform specific.)  You must also have Blender 4.2 or higher installed and in your path.  
+
+The Parrot Lipsync extension can be built by being in the root directory and running the command
+
+```python ./make.py -e```
+
+This will place the built zipfiles in the `./extensions` directory.
+
+### Getting the wheels
+
+A wheel is an archive of a python module that can be imported into a Python program.  Since Blender 4.2, all necessary wheels must be bundled with the extension.  Since Parrot uses artificial intelligence, it requires several big wheels.  If you run the make file with the `-w` flag, it will download the wheels necessary for the platform you are running on.  
+
+```python ./make.py -w```
+
+There is currently no way (that I know of) to download the wheels for a different platform, but if you want the wheels for platforms other than the one you are building on, you can run the script on those other platforms and then copy the downloaded wheels into your `./source/wheels` directory.
+
+
 ## Acknowledgements
 
-Whisper AI
-https://github.com/openai/whisper
-
-Gruut
-https://rhasspy.github.io/gruut/index.html
+allosaurus
+https://github.com/xinjli/allosaurus
 
 Blender Base Meshes:
 https://studio.blender.org/training/stylized-character-workflow/base-meshes/

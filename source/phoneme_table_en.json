@@ -67,6 +67,12 @@
             "group": "M"
         },
         {
+            "code": "b̥",
+            "class": "Stops",
+            "example": "*b*ill, a*b*ove, ri*b*",
+            "group": "M"
+        },
+        {
             "code": "t",
             "class": "Stops",
             "example": "*t*all, in*t*ernal, ligh*t*",
@@ -86,6 +92,12 @@
         },
         {
             "code": "ɡ",
+            "class": "Stops",
+            "example": "*g*ive, ba*gg*age, di*g*",
+            "group": "C"
+        },
+        {
+            "code": "g",
             "class": "Stops",
             "example": "*g*ive, ba*gg*age, di*g*",
             "group": "C"
@@ -111,6 +123,12 @@
         },
         {
             "code": "ð",
+            "class": "Fricatives",
+            "example": "*th*ere, lea*th*er, brea*th*e",
+            "group": "TH"
+        },
+        {
+            "code": "tʰ",
             "class": "Fricatives",
             "example": "*th*ere, lea*th*er, brea*th*e",
             "group": "TH"
@@ -186,6 +204,12 @@
         },
         {
             "code": "ɹ",
+            "class": "Approximants",
+            "example": "*r*obot, fu*rr*y, sta*r*",
+            "group": "C"
+        },
+        {
+            "code": "ɹ̩",
             "class": "Approximants",
             "example": "*r*obot, fu*rr*y, sta*r*",
             "group": "C"
@@ -291,6 +315,12 @@
             "group": "EE"
         },
         {
+            "code": "ɯ",
+            "class": "Central Vowels",
+            "example": "b*e*lieve, cinn*a*mon, s*u*rround (in an unstressed syllable)",
+            "group": "EE"
+        },
+        {
             "code": "ɨ",
             "class": "Central Vowels",
             "example": "ros*e*s, want*e*d (in an unstressed syllable that is a suffix)",
@@ -345,6 +375,5 @@
             "example": "c*ue*, f*ew*",
             "group": "U"
         }
-    
     ]
 }

@@ -51,6 +51,23 @@ python_modules = [
 # "gruut-lang-sw",
 ]
 
+# wheels_no_deps = [
+    # "allosaurus", "resampy", "panphon", "requests", "tqdm",    
+    # "filelock", "fsspec", "jinja2", "mpmath", "munkres", "networkx", "panphon", 
+# ]
+
+# wheels_bin = [
+    # "scipy", "torch", "editdistance", 
+    # "editdistance", "llvmlite", "MarkupSafe", "numba", 
+# ]
+
+# wheels_bin = [
+    # ["allosaurus", "--no-deps", "macosx_14_0_arm64"],
+    # ["scipy", "--only-binary=:all:", "macosx_14_0_arm64"],
+# ]
+
+#https://files.pythonhosted.org/packages/07/85/3ef1d2f70736bef5650c7fedbf4d4e01efe728f10bad0294a9a8d396ff00/allosaurus-1.0.2-py3-none-any.whl
+
 #pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_arm64
 #pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_x86_64
 
@@ -77,8 +94,8 @@ def build_wheels():
         for module in python_modules:
             #pip.main(["download", module, "--dest", "source/wheels", "--only-binary=:all:", "--python-version=3.11", "--platform=" + plat])
 
-#            subprocess.call(["pip", "wheel", "numba", "-w", "source/wheels2"])
-            subprocess.call(["python", "-m", "pip", "wheel", "--wheel-dir", "source/wheels", "--only-binary=:all:", module])
+            subprocess.call(["pip", module, "numba", "-w", "source/wheels2"])
+#            subprocess.call(["python", "-m", "pip", "wheel", "--wheel-dir", "source/wheels", "--only-binary=:all:", module])
             
 
 def build_extension():

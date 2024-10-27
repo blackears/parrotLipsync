@@ -23,32 +23,14 @@ import sys
 import os
 import shutil
 
-#projectName = 'kitfoxQuadRemesher'
+#projectName = 'parrotLipsync'
 
 platforms = ["macosx_11_0_arm64", "manylinux_2_28_x86_64", "win_amd64", "manylinux_2_17_x86_64"]
 #platforms = ["macosx_11_0_arm64", "manylinux_2_17_x86_64", "win_amd64"]
 
 python_modules = [
-#"pocketsphinx",
 "allosaurus",
-#"whisper_timestamped-1.15.4",
-#"whisper_timestamped", 
 
-# "gruut", 
-# "gruut-lang-ar",
-# "gruut-lang-cs",
-# "gruut-lang-de",
-# "gruut-lang-en",
-# "gruut-lang-es",
-# "gruut-lang-fa",
-# "gruut-lang-fr",
-# "gruut-lang-it",
-# "gruut-lang-lb",
-# "gruut-lang-nl",
-# "gruut-lang-pt",
-# "gruut-lang-ru",
-# "gruut-lang-sv",
-# "gruut-lang-sw",
 ]
 
 # wheels_no_deps = [

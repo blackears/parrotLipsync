@@ -96,7 +96,7 @@ def build_extension():
 #blender --command extension build --split-platforms
 
 def install_extension():
-    subprocess.call(["blender", "--command", "extension", "install-file", "--enable", "--repo", "user_default",  "extension/parrot_lipsync-1.1.0-windows_x64.zip"])
+    subprocess.call(["blender", "--command", "extension", "install-file", "--enable", "--repo", "user_default",  "extension/parrot_lipsync-1.1.1-windows_x64.zip"])
 
 
 if __name__ == '__main__':

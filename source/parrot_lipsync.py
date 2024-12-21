@@ -298,22 +298,22 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
             box.prop(pose_props, "pose")
         
             
-class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
-    bl_label = "Setup"
-    bl_idname = "PLUGIN_PT_lipsync_setup"
-    bl_parent_id = "PLUGIN_PT_lipsync"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_options = {"DEFAULT_CLOSED"}
+# class PLUGIN_PT_ParrotLipsyncSetupPanel(bpy.types.Panel):
+    # bl_label = "Setup"
+    # bl_idname = "PLUGIN_PT_lipsync_setup"
+    # bl_parent_id = "PLUGIN_PT_lipsync"
+    # bl_space_type = 'VIEW_3D'
+    # bl_region_type = 'UI'
+    # bl_options = {"DEFAULT_CLOSED"}
 
-    def draw(self, context):
-        props = context.scene.props
-        layout = self.layout
+    # def draw(self, context):
+        # props = context.scene.props
+        # layout = self.layout
 
-        main_column = layout.column()
+        # main_column = layout.column()
         
-        main_column.operator("parrot.install_whisper")
-        main_column.operator("parrot.install_gruut")
+        # main_column.operator("parrot.install_whisper")
+        # main_column.operator("parrot.install_gruut")
 
 
         
@@ -548,12 +548,6 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
     bl_idname = "parrot.render_lipsync_to_object_nla"
     
     def execute(self, context):
-        for mod in ['whisper_timestamped', 'gruut']:
-            if not is_library_installed(mod):
-#            if not importlib.machinery.PathFinder().find_spec(mod):
-            #if not importlib.util.find_spec(mod):
-                self.report({"ERROR"}, mod + " not installed")
-                return {'CANCELLED'}
             
 
         props = context.scene.props
@@ -621,11 +615,6 @@ class PLUGIN_OT_ParrotRenderLipsyncToAction(bpy.types.Operator):
     bl_idname = "parrot.lipsync_to_action"
     
     def execute(self, context):
-        for mod in ['whisper_timestamped', 'gruut']:
-            if not is_library_installed(mod):
-                self.report({"ERROR"}, mod + " not installed")
-                return {'CANCELLED'}
-            
     
         props = context.scene.props
         

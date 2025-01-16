@@ -10,9 +10,9 @@ Parrot Lipsync is an extension for Blender that lets you automatically generate 
 
 ## Installation
 
-### Older versions
-
-> [For installing Parrot version 1.0.5 and earlier, please use the instructions on this page.](docs/installing_parrot_1_0_5.md)
+> ### Older versions
+>
+> [For installing Parrot version 1.0.5 and earlier, please use the instructions on this page.](doc/installing_parrot_1_0_5.md)
 
 ### Latest Version
 

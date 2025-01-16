@@ -20,30 +20,14 @@
 # SOFTWARE.
 
 
-# bl_info = {
-    # "name": "Parrot Lipsync",
-    # "author": "Mark McKay",
-    # "version": (1, 1, 1),
-    # "blender": (4, 0, 0),
-    # "location": "View3D > Export > Mesh Exporter",
-    # "description": "Generate lipsync tracks from audio files using Whisper AI.",
-    # #"warning": "",
-    # "doc_url": "https://github.com/blackears/parrotLipsync",
-    # "category": "View 3D"
-# }
-
 import bpy
 from .parrot_lipsync import ParrotPoseProps
 from .parrot_lipsync import ParrotLipsyncProps
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPanel
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel
-#from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncSetupPanel
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToAction
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToRigNla
 from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
-#from .parrot_lipsync import ParrotAddonPreferences
-#from .parrot_lipsync import LibraryInstaller
-#from .parrot_lipsync import LibraryUninstaller
 
 
 
@@ -57,24 +41,17 @@ _classes=[
     PLUGIN_OT_ParrotRenderLipsyncToAction,
     PLUGIN_OT_ParrotRenderLipsyncToRigNla,
     PLUGIN_OT_ParrotReloadPhonemeTable,
-#    ParrotAddonPreferences,
-#    LibraryInstaller,
-#    LibraryUninstaller,
 ]
 
 _register, _unregister = bpy.utils.register_classes_factory(_classes)
 
 def register():
-    # for cls in _classes:
-        # bpy.utils.register_class(cls)
     _register()
         
     bpy.types.Scene.props = bpy.props.PointerProperty(type=ParrotLipsyncProps)
 
 
 def unregister():
-    # for cls in _classes:
-        # bpy.utils.unregister_class(cls)
     _unregister()
         
     bpy.types.Scene.props = None

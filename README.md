@@ -10,14 +10,21 @@ Parrot Lipsync is an extension for Blender that lets you automatically generate 
 
 ## Installation
 
+### Older versions
+
+> [For installing Parrot version 1.0.5 and earlier, please use the instructions on this page.](docs/installing_parrot_1_0_5.md)
+
+### Latest Version
+
 Parrot Lipsync relies on you having `ffmpeg` already installed on your computer.
 
 
-### Install Ffmpeg
+#### Install Ffmpeg
 
-[Ffmpeg](https://ffmpeg.org/) is a popular library that lets you read and write many audio/video files.  It needs to be accessible from the command line.
+[Ffmpeg](https://ffmpeg.org/) is a popular library that lets you read and write many audio/video files.  It needs to be accessible from the command line.  
 
-Open a command prompt and type the following to see if it is already installed:
+The ffmpeg homepage offers installers for a variety of systems.  Alternately, you can use the below commands to install it from a terminal:
+
 
 ```
 ffmpeg -version
@@ -43,7 +50,7 @@ scoop install ffmpeg
 ```
 
 
-### Installing the Parrot Lipsync extension
+#### Installing the Parrot Lipsync extension
 
 Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Preferences > Addons` tab, clicking the downward pointing arrow button in the top right corner and selecting `Install from Disk...`.  Browse to the Parrot Lipsync zip file you downloaded and select it.  Finally, make sure the check mark next to `View 3D: Parrot Lipsync` is checked so that the extension is activated.
 

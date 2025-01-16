@@ -115,41 +115,41 @@ class ParrotPoseProps(bpy.types.PropertyGroup):
     )
 
 class ParrotLipsyncProps(bpy.types.PropertyGroup):
-    espeak_path: bpy.props.StringProperty(
-        name="eSpeak library file",
-        default='C:\\Program Files\\eSpeak NG\\libespeak-ng.dll',
-        subtype='FILE_PATH',
-    )
-    whisper_library_model: bpy.props.EnumProperty(
-        name="Whisper library",
-        items= [('tiny', 'tiny', 'vram ~1GB, speed 32x'),
-               ('base', 'base', 'vram ~1GB, speed 16x'),
-               ('small', 'small', 'vram ~2GB, speed 6x'),
-               ('medium', 'medium', 'vram ~5GB, speed 2x'),
-               ('large', 'large', 'vram ~10GB, speed 1x'),
-               ('tiny.en', 'tiny.en', 'english only - vram ~1GB, speed 32x'),
-               ('base.en', 'base.en', 'english only - vram ~1GB, speed 16x'),
-               ('small.en', 'small.en', 'english only - vram ~2GB, speed 6x'),
-               ('medium.en', 'medium.en', 'english only - vram ~5GB, speed 2x'),],
-        default='base'
-    )
-    autodetect_language: bpy.props.BoolProperty(
-        name="Auto detect language",
-        description="If checked, will automatically determine language being spoken.",
-        default=False,
-    )
-    language_code: bpy.props.StringProperty(
-        name="Language code",
-        description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
-        default="en"
-    )
-    key_interpolation: bpy.props.EnumProperty(
-        name="Key Interpolation",
-        items= [('constant', 'constant', 'constant interpolation'),
-               ('linear', 'linear', 'linaer interpolation'),
-               ('bezier', 'bezier', 'bezier interpolation'),],
-        default='bezier'
-    )
+    # espeak_path: bpy.props.StringProperty(
+        # name="eSpeak library file",
+        # default='C:\\Program Files\\eSpeak NG\\libespeak-ng.dll',
+        # subtype='FILE_PATH',
+    # )
+    # whisper_library_model: bpy.props.EnumProperty(
+        # name="Whisper library",
+        # items= [('tiny', 'tiny', 'vram ~1GB, speed 32x'),
+               # ('base', 'base', 'vram ~1GB, speed 16x'),
+               # ('small', 'small', 'vram ~2GB, speed 6x'),
+               # ('medium', 'medium', 'vram ~5GB, speed 2x'),
+               # ('large', 'large', 'vram ~10GB, speed 1x'),
+               # ('tiny.en', 'tiny.en', 'english only - vram ~1GB, speed 32x'),
+               # ('base.en', 'base.en', 'english only - vram ~1GB, speed 16x'),
+               # ('small.en', 'small.en', 'english only - vram ~2GB, speed 6x'),
+               # ('medium.en', 'medium.en', 'english only - vram ~5GB, speed 2x'),],
+        # default='base'
+    # )
+    # autodetect_language: bpy.props.BoolProperty(
+        # name="Auto detect language",
+        # description="If checked, will automatically determine language being spoken.",
+        # default=False,
+    # )
+    # language_code: bpy.props.StringProperty(
+        # name="Language code",
+        # description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
+        # default="en"
+    # )
+    # key_interpolation: bpy.props.EnumProperty(
+        # name="Key Interpolation",
+        # items= [('constant', 'constant', 'constant interpolation'),
+               # ('linear', 'linear', 'linaer interpolation'),
+               # ('bezier', 'bezier', 'bezier interpolation'),],
+        # default='bezier'
+    # )
     phoneme_table_path: bpy.props.StringProperty(
         name="Phoneme table file",
         default='//phoneme_table_en.json',
@@ -640,7 +640,7 @@ class PLUGIN_OT_ParrotRenderLipsyncToAction(bpy.types.Operator):
 
 class PLUGIN_OT_ParrotReloadPhonemeTable(bpy.types.Operator):
     """
-    Install Whisper
+    Reload Phoneme Table
     """
     bl_label = "Reload Phoneme Table"
     bl_idname = "parrot.reload_phoneme_table"

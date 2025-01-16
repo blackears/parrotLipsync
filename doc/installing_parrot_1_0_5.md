@@ -42,7 +42,7 @@ Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Pref
 
 Parrot needs some support libraries to function.  The easiest way to install them is to open Parrot's configuration page in the `Addon` window to reveal the buttons on the bottom.  Press the `Install whisper_timestamped` and `Install gruut` buttons to ensure these necessary libraries are added to your Blender's python packages.  Some languages will require an additional package - for example, if you intend to use the Russian language, make sure to click the `Install gruut-lang-ru` button as well.
 
-![Addon install panel](addon_install_panel.jpg)
+![Addon install panel](addon_install_panel_1_0_5.jpg)
 
 
 ### Alternate installation procedure for Whisper and Gruut

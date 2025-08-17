@@ -51,7 +51,7 @@ jobs:
           cd ${{ github.workspace }}
           $BLENDER_VERSION="4.5.1"
           $BLENDER_DIR_NAME="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}"
-          $BLENDER_ARCHIVE="$BLENDER_ARCHIVE.zip"
+          $BLENDER_ARCHIVE="$BLENDER_DIR_NAME.zip"
           $BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
           Expand-Archive -Path $BLENDER_ARCHIVE 

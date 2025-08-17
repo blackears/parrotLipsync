@@ -4,7 +4,7 @@ on: [ workflow_call, workflow_dispatch ]
 jobs:
   build:
     name: 🪟 Windows ${{ matrix.arch }}
-    runs-on: ubuntu-22.04
+    runs-on: [ubuntu-22.04, ${{ matrix.arch }}]
     strategy:
       fail-fast: false
       matrix:
@@ -53,6 +53,6 @@ jobs:
       - name: Build Extension
         run: |
           mkdir extension
-          blender/blender --command extension build --source-dir source --output-dir extension
+          ./blender/blender.exe --command extension build --source-dir source --output-dir extension
           ls extension
 

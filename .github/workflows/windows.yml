@@ -38,6 +38,7 @@ jobs:
 
       - name: Setup Blender
         run: |
+          cd ..
           BLENDER_VERSION="4.5.1"
           BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
@@ -46,4 +47,10 @@ jobs:
           mv blender-${BLENDER_VERSION}-windows-${{ matrix.arch }} blender 
           echo "--root dir ls--"
           ls
+
+      - name: Build Extension
+        run: |
+          mkdir extension
+          blender/blender.exe --command extension build --source-dir source --output-dir extension
+          ls extension
 

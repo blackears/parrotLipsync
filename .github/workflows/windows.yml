@@ -27,8 +27,14 @@ jobs:
         run: |
           mkdir source/wheels
           pip wheel -w source/wheels allosaurus
+
+      - name: Create manifest
+        run: |
+          cd source
           echo "--wheels--"
-          ls source/wheels
+          (cat blender_manifest_base.toml; echo "wheels = ["; ls -1 | sed 's/\(^.*$\)/\t"\1",/'; echo "]") > blender_manifest.toml
+          cat blender_manifest.toml
+#          ls source/wheels
 
       - name: Setup Blender
         run: |

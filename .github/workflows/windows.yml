@@ -21,7 +21,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      #- run: pip install allosaurus
 
       - name: Download Wheels
         run: |
@@ -32,19 +31,12 @@ jobs:
         run: |
           cd source
           echo "--wheels--"
-          Copy-Item -Path "blender_manifest_base.toml" -Destination "blender_manifest.toml"
+          Copy-Item -Path "..\blender_manifest_base.toml" -Destination "blender_manifest.toml"
           $outputFile = "blender_manifest.toml"
           Add-Content -Path $outputFile -Value "wheels = ["
           Get-ChildItem -Path ".\wheels" -File | ForEach-Object { "  `"./wheels/$($_.Name)`"," } | Add-Content -Path $outputFile
           Add-Content -Path $outputFile -Value "]"
           Get-Content $outputFile
-#          Write-Host "wheels = ["
-#          Get-ChildItem -Path "C:\Your\Directory\Path" -File | ForEach-Object { "`"$($_.Name)`"" }
-#          Write-Host "]"
-#          for /f "delims=" %A in ('dir /b') do @echo   "%A",
-#          (cat blender_manifest_base.toml; echo "wheels = ["; ls -1 wheels | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
-#          cat blender_manifest.toml
-#          ls source/wheels
 
       - name: Setup Blender
         run: |
@@ -56,12 +48,6 @@ jobs:
           Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
           Expand-Archive -Path $BLENDER_ARCHIVE 
           Move-Item -Path $BLENDER_DIR_NAME\$BLENDER_DIR_NAME -Destination .\blender
-          echo "--pwd--"
-          pwd
-          echo "--root dir ls--"
-          Get-ChildItem -Path "."
-          echo "--blender dir ls--"
-          Get-ChildItem -Path ".\blender"
 
       - name: Build Extension
         run: |

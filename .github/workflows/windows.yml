@@ -35,7 +35,7 @@ jobs:
           Copy-Item -Path "blender_manifest_base.toml" -Destination "blender_manifest.toml"
           $outputFile = "blender_manifest.toml"
           Add-Content -Path $outputFile -Value "wheels = ["
-          Get-ChildItem -Path $path -File | ForEach-Object { "  `"$($_.Name)`"," } | Add-Content -Path $outputFile
+          Get-ChildItem -Path ".\wheels" -File | ForEach-Object { "  `"$($_.Name)`"," } | Add-Content -Path $outputFile
           Add-Content -Path $outputFile -Value "]"
           Get-Content $outputFile
 #          Write-Host "wheels = ["
@@ -54,21 +54,17 @@ jobs:
           $BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
           Expand-Archive -Path $BLENDER_ARCHIVE
-          mv blender-$BLENDER_VERSION-windows-${{ matrix.arch }} blender 
+          Rename-Item -Path blender-$BLENDER_VERSION-windows-${{ matrix.arch }} -NewName "blender"
           echo "--pwd--"
           pwd
           echo "--root dir ls--"
-          ls
+          Get-ChildItem
           echo "--blender dir ls--"
-          ls blender
+          Get-ChildItem -Path ".\blender"
 
       - name: Build Extension
         run: |
           cd ${{ github.workspace }}
-          echo "--pwd--"
-          pwd
-          echo "--ls--"
-          ls
           mkdir extension
           ./blender/blender.exe --command extension build --source-dir source --output-dir extension
           ls extension

@@ -29,7 +29,7 @@ jobs:
           BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
-          tar -xf ${BLENDER_ARCHIVE}
+          unzip ${BLENDER_ARCHIVE}
           mv blender-${BLENDER_VERSION}-windows-${{ matrix.arch }} blender 
           ls
 

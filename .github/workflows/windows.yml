@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup Blender
         run: |
-          cd ..
+          cd ${{ github.workspace }}
           BLENDER_VERSION="4.5.1"
           BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
@@ -54,6 +54,7 @@ jobs:
 
       - name: Build Extension
         run: |
+          cd ${{ github.workspace }}
           echo "--pwd--"
           pwd
           echo "--ls--"

@@ -4,7 +4,7 @@ on: [ workflow_call, workflow_dispatch ]
 jobs:
   build:
     name: 🪟 Windows ${{ matrix.arch }}
-    runs-on: [windows-latest]
+    runs-on: [ubuntu-22.04]
     strategy:
       fail-fast: false
       matrix:
@@ -32,18 +32,8 @@ jobs:
         run: |
           cd source
           echo "--wheels--"
-          Copy-Item -Path "blender_manifest_base.toml" -Destination "blender_manifest.toml"
-          $outputFile = "blender_manifest.toml"
-          Add-Content -Path $outputFile -Value "wheels = ["
-          Get-ChildItem -Path $path -File | ForEach-Object { "  `"$($_.Name)`"," } | Add-Content -Path $outputFile
-          Add-Content -Path $outputFile -Value "]"
-
-#          Write-Host "wheels = ["
-#          Get-ChildItem -Path "C:\Your\Directory\Path" -File | ForEach-Object { "`"$($_.Name)`"" }
-#          Write-Host "]"
-#          for /f "delims=" %A in ('dir /b') do @echo   "%A",
-#          (cat blender_manifest_base.toml; echo "wheels = ["; ls -1 wheels | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
-#          cat blender_manifest.toml
+          (cat blender_manifest_base.toml; echo "wheels = ["; ls -1 wheels | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
+          cat blender_manifest.toml
 #          ls source/wheels
 
       - name: Setup Blender

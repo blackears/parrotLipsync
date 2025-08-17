@@ -53,12 +53,12 @@ jobs:
           $BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
           $BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
-          Expand-Archive -Path $BLENDER_ARCHIVE
+          Expand-Archive -Path $BLENDER_ARCHIVE 
           Rename-Item -Path blender-$BLENDER_VERSION-windows-${{ matrix.arch }} -NewName "blender"
           echo "--pwd--"
           pwd
           echo "--root dir ls--"
-          Get-ChildItem
+          Get-ChildItem -Path "."
           echo "--blender dir ls--"
           Get-ChildItem -Path ".\blender"
 

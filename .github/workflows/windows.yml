@@ -23,6 +23,13 @@ jobs:
           python-version: 3.x
       #- run: pip install allosaurus
 
+      - name: Download Wheels
+        run: |
+          mkdir source/wheels
+          pip wheel -w source/wheels allosaurus
+          echo "--wheels--"
+          ls source/wheels
+
       - name: Setup Blender
         run: |
           BLENDER_VERSION="4.5.1"
@@ -31,5 +38,6 @@ jobs:
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           unzip ${BLENDER_ARCHIVE}
           mv blender-${BLENDER_VERSION}-windows-${{ matrix.arch }} blender 
+          echo "--root dir ls--"
           ls
 

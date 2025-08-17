@@ -35,7 +35,7 @@ jobs:
           Copy-Item -Path "blender_manifest_base.toml" -Destination "blender_manifest.toml"
           $outputFile = "blender_manifest.toml"
           Add-Content -Path $outputFile -Value "wheels = ["
-          Get-ChildItem -Path ".\wheels" -File | ForEach-Object { "  `"$($_.Name)`"," } | Add-Content -Path $outputFile
+          Get-ChildItem -Path ".\wheels" -File | ForEach-Object { "  `"./wheels/$($_.Name)`"," } | Add-Content -Path $outputFile
           Add-Content -Path $outputFile -Value "]"
           Get-Content $outputFile
 #          Write-Host "wheels = ["
@@ -69,4 +69,12 @@ jobs:
           mkdir extension
           .\blender\blender.exe --command extension build --source-dir source --output-dir extension
           ls extension
+
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: parrotLipsync-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            ${{ github.workspace }}/extension/
 

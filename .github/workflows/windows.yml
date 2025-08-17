@@ -4,7 +4,7 @@ on: [ workflow_call, workflow_dispatch ]
 jobs:
   build:
     name: 🪟 Windows ${{ matrix.arch }}
-    runs-on: [ubuntu-22.04, ${{ matrix.arch }}]
+    runs-on: [ubuntu-22.04]
     strategy:
       fail-fast: false
       matrix:

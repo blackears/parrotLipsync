@@ -45,6 +45,8 @@ jobs:
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           unzip ${BLENDER_ARCHIVE}
           mv blender-${BLENDER_VERSION}-windows-${{ matrix.arch }} blender 
+          echo "--pwd--"
+          pwd
           echo "--root dir ls--"
           ls
           echo "--blender dir ls--"

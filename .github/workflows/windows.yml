@@ -37,7 +37,7 @@ jobs:
           Add-Content -Path $outputFile -Value "wheels = ["
           Get-ChildItem -Path $path -File | ForEach-Object { "  `"$($_.Name)`"," } | Add-Content -Path $outputFile
           Add-Content -Path $outputFile -Value "]"
-
+          Get-Content $outputFile
 #          Write-Host "wheels = ["
 #          Get-ChildItem -Path "C:\Your\Directory\Path" -File | ForEach-Object { "`"$($_.Name)`"" }
 #          Write-Host "]"
@@ -49,12 +49,12 @@ jobs:
       - name: Setup Blender
         run: |
           cd ${{ github.workspace }}
-          BLENDER_VERSION="4.5.1"
-          BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
-          BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
-          curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
-          unzip ${BLENDER_ARCHIVE}
-          mv blender-${BLENDER_VERSION}-windows-${{ matrix.arch }} blender 
+          $BLENDER_VERSION="4.5.1"
+          $BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
+          $BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
+          Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
+          Expand-Archive -Path $BLENDER_ARCHIVE
+          mv blender-$BLENDER_VERSION-windows-${{ matrix.arch }} blender 
           echo "--pwd--"
           pwd
           echo "--root dir ls--"

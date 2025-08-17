@@ -1,0 +1,35 @@
+name: 🪟 Windows Builds
+on: [ workflow_call, workflow_dispatch ]
+
+jobs:
+  build:
+    name: 🪟 Windows ${{ matrix.arch }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows]
+        arch: [x64, arm64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+        
+      - name: Setup Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      #- run: pip install allosaurus
+
+      - name: Setup Blender
+        run: |
+          BLENDER_VERSION="4.5.1"
+          BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
+          BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
+          curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
+          tar -xf ${BLENDER_ARCHIVE}
+          mv blender-${BLENDER_VERSION}-windows-${{ matrix.arch }} blender 
+          ls
+

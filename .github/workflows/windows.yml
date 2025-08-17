@@ -66,6 +66,6 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          ./blender/blender.exe --command extension build --source-dir source --output-dir extension
+          .\blender\blender.exe --command extension build --source-dir source --output-dir extension
           ls extension
 

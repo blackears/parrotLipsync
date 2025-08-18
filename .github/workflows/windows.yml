@@ -4,7 +4,7 @@ on: [ workflow_call, workflow_dispatch ]
 jobs:
   build:
     name: 🪟 Windows ${{ matrix.arch }}
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: ${{ matrix.runs_on }}
     strategy:
       fail-fast: false
       matrix:

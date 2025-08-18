@@ -4,12 +4,19 @@ on: [ workflow_call, workflow_dispatch ]
 jobs:
   build:
     name: 🪟 Windows ${{ matrix.arch }}
-    runs-on: [windows-latest]
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows]
-        arch: [x64, arm64]
+        include:
+          - arch: x64
+            runs_on: windows-latest
+            py_arch: x64
+            blender_arch: x64
+          - arch: arm64
+            runs_on: windows-11-arm
+            py_arch: arm64
+            blender_arch: arm64
 
     steps:
       - name: Checkout
@@ -21,46 +28,47 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.x
+          architecture: ${{ matrix.py_arch }}  # x64 or arm64
 
       - name: Download Wheels
         run: |
           mkdir source/wheels
-          pip wheel -w source/wheels allosaurus
+          # Optional, fail fast if no native wheel exists for this arch
+          pip wheel --only-binary=:all: -w source/wheels allosaurus
 
       - name: Create manifest
         run: |
           cd source
-          echo "--wheels--"
           Copy-Item -Path "..\blender_manifest_base.toml" -Destination "blender_manifest.toml"
-          $outputFile = "blender_manifest.toml"
-          Add-Content -Path $outputFile -Value "wheels = ["
-          Get-ChildItem -Path ".\wheels" -File | ForEach-Object { "  `"./wheels/$($_.Name)`"," } | Add-Content -Path $outputFile
-          Add-Content -Path $outputFile -Value "]"
-          Get-Content $outputFile
+          $out = "blender_manifest.toml"
+          Add-Content $out "wheels = ["
+          Get-ChildItem .\wheels -File | ForEach-Object { "  `"./wheels/$($_.Name)`"," } | Add-Content $out
+          Add-Content $out -Value "]"
+          Get-Content $out
 
       - name: Setup Blender
         run: |
           cd ${{ github.workspace }}
           $BLENDER_VERSION="4.5.1"
-          $BLENDER_DIR_NAME="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}"
+          $BLENDER_DIR_NAME="blender-${BLENDER_VERSION}-windows-${{ matrix.blender_arch }}"
           $BLENDER_ARCHIVE="$BLENDER_DIR_NAME.zip"
-          $BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
+          $BLENDER_URL="https://download.blender.org/release/Blender4.5/$BLENDER_ARCHIVE"
           Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
-          Expand-Archive -Path $BLENDER_ARCHIVE 
-          Move-Item -Path $BLENDER_DIR_NAME\$BLENDER_DIR_NAME -Destination .\blender
+          Expand-Archive -Path $BLENDER_ARCHIVE -DestinationPath .
+          Rename-Item -Path $BLENDER_DIR_NAME -NewName blender
 
       - name: Build Extension
         run: |
           cd ${{ github.workspace }}
           mkdir extension
           .\blender\blender.exe --command extension build --source-dir source --output-dir extension
-          ls extension
+          dir extension
 
       - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: parrotLipsync-${{ matrix.platform }}-${{ matrix.arch }}
+          name: parrotLipsync-windows-${{ matrix.arch }}
           path: |
             ${{ github.workspace }}/extension/
 

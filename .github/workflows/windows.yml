@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir source/wheels
           # Optional, fail fast if no native wheel exists for this arch
-          pip wheel --prefer-binary=:all: -w source/wheels allosaurus
+          pip wheel --prefer-binary -w source/wheels allosaurus
 
       - name: Create manifest
         run: |

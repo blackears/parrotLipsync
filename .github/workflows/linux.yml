@@ -1,15 +1,19 @@
-name: 🪟 Windows Builds
+name: 🐧 Linux Builds
 on: [ workflow_call, workflow_dispatch ]
 
 jobs:
   build:
-    name: 🪟 Windows ${{ matrix.arch }}
-    runs-on: [ubuntu-22.04]
+    name: 🐧 Linux ${{ matrix.arch }}
+    runs-on: ${{ matrix.runs_on }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows]
-        arch: [x64, arm64]
+        include:
+          - arch: x64
+            runs_on: ubuntu-latest
+            py_arch: x64
+            blender_arch: x64
+            blender_platform: linux-x64
 
     steps:
       - name: Checkout
@@ -21,30 +25,28 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      #- run: pip install allosaurus
+          architecture: ${{ matrix.py_arch }}  # x64 or arm64
 
       - name: Download Wheels
         run: |
           mkdir source/wheels
-          pip wheel -w source/wheels allosaurus
+          # Optional, fail fast if no native wheel exists for this arch
+          pip wheel --prefer-binary=:all: -w source/wheels allosaurus
 
       - name: Create manifest
         run: |
           cd source
-          echo "--wheels--"
-          (cat blender_manifest_base.toml; echo "wheels = ["; ls -1 wheels | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
-          cat blender_manifest.toml
-#          ls source/wheels
+          (cat ../blender_manifest_template_linux.toml; echo "wheels = ["; ls -1 wheels | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
 
       - name: Setup Blender
         run: |
           cd ${{ github.workspace }}
-          BLENDER_VERSION="4.5.1"
-          BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-windows-${{ matrix.arch }}.zip"
+          BLENDER_VERSION="4.5.2"
+          BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-linux-${{ matrix.arch }}.zip"
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           unzip ${BLENDER_ARCHIVE}
-          mv blender-${BLENDER_VERSION}-windows-${{ matrix.arch }} blender 
+          mv blender-${BLENDER_VERSION}-linux-${{ matrix.arch }} blender 
           echo "--pwd--"
           pwd
           echo "--root dir ls--"
@@ -55,11 +57,17 @@ jobs:
       - name: Build Extension
         run: |
           cd ${{ github.workspace }}
-          echo "--pwd--"
-          pwd
-          echo "--ls--"
-          ls
           mkdir extension
-          ./blender/blender.exe --command extension build --source-dir source --output-dir extension
+          .\blender\blender.exe --command extension build --source-dir source --output-dir extension
+          echo "--blender extension ls--"
           ls extension
+
+      - name: Upload Package
+        uses: actions/upload-artifact@v4
+        with:
+          include-hidden-files: true
+          name: parrotLipsync-linux-${{ matrix.arch }}
+          path: |
+            ${{ github.workspace }}/extension/
+
 

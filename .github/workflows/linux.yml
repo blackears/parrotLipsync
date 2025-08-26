@@ -42,10 +42,10 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           BLENDER_VERSION="4.5.2"
-          BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-linux-${{ matrix.arch }}.zip"
+          BLENDER_ARCHIVE="blender-${BLENDER_VERSION}-linux-${{ matrix.arch }}.tar.xz"
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
-          unzip ${BLENDER_ARCHIVE}
+          tar -xf ${BLENDER_ARCHIVE}
           mv blender-${BLENDER_VERSION}-linux-${{ matrix.arch }} blender 
           echo "--pwd--"
           pwd

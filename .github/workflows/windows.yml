@@ -14,11 +14,11 @@ jobs:
             py_arch: x64
             blender_arch: x64
             blender_platform: windows-x64
-          - arch: arm64
-            runs_on: windows-11-arm
-            py_arch: arm64
-            blender_arch: arm64
-            blender_platform: windows-amd64
+          # - arch: arm64
+          #   runs_on: windows-11-arm
+          #   py_arch: arm64
+          #   blender_arch: arm64
+          #   blender_platform: windows-amd64
 
     steps:
       - name: Checkout

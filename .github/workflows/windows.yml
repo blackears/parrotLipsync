@@ -12,6 +12,7 @@ jobs:
           - arch: x64
             runs_on: windows-latest
             py_arch: x64
+            blender_version: "1.1.1"
             blender_arch: x64
             blender_platform: windows-x64
           # - arch: arm64
@@ -63,7 +64,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          .\blender\blender.exe --command extension build --source-dir source --output-dir extension
+          .\blender\blender.exe --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.blender_version }}-windows-${{ matrix.arch }}.zip"
           dir extension
 
       - name: Upload Package

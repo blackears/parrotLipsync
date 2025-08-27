@@ -48,18 +48,12 @@ jobs:
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           tar -xf ${BLENDER_ARCHIVE}
           mv blender-${BLENDER_VERSION}-linux-${{ matrix.arch }} blender 
-          echo "--pwd--"
-          pwd
-          echo "--root dir ls--"
-          ls
-          echo "--blender dir ls--"
-          ls blender
 
       - name: Build Extension
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          ./blender/blender --command extension build --source-dir source --output-dir extension --output-filepath "parrotLipsync-${{ matrix.blender_version }}-windows-${{ matrix.arch }}.zip"
+          ./blender/blender --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.blender_version }}-linux-${{ matrix.arch }}.zip"
           echo "--blender extension ls--"
           ls extension
 

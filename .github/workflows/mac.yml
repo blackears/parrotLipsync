@@ -18,7 +18,7 @@ jobs:
           - arch: arm64
             runs_on: macos-latest
             py_arch: arm64
-            blender_version: "1_1_1"
+            blender_version: "1.1.1"
             blender_arch: arm64
             blender_platform: macos-arm64
 
@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
-          name: parrotLipsync-macos-${{ matrix.arch }}
+          name: parrotLipsync-${{ matrix.blender_version }}-macos-${{ matrix.arch }}
           #path: ${{ github.workspace }}/extension/
           path: "extension/parrotLipsync-${{ matrix.blender_version }}-macos-${{ matrix.arch }}.zip"
           compression-level: 0

@@ -57,31 +57,19 @@ jobs:
           echo "--ls /Volumes/Blender/Blender.app/Contents/MacOS--"
           ls /Volumes/Blender/Blender.app/Contents/MacOS
 
-
-
-        #   tar -xf ${BLENDER_ARCHIVE}
-        #   mv blender-${BLENDER_VERSION}-linux-${{ matrix.arch }} blender 
-        #   echo "--pwd--"
-        #   pwd
-        #   echo "--root dir ls--"
-        #   ls
-        #   echo "--blender dir ls--"
-        #   ls blender
-
       - name: Build Extension
         run: |
           cd ${{ github.workspace }}
           mkdir extension
           "/Volumes/Blender/Blender.app/Contents/MacOS/Blender" --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.blender_version }}-macos-${{ matrix.arch }}.zip"
-          echo "--blender extension ls--"
-          ls extension
 
       - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
           name: parrotLipsync-macos-${{ matrix.arch }}
-          path: |
-            ${{ github.workspace }}/extension/
+          #path: ${{ github.workspace }}/extension/
+          path: "extension/parrotLipsync-${{ matrix.blender_version }}-macos-${{ matrix.arch }}.zip"
+          compression-level: 0
 
 

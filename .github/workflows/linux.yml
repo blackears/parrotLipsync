@@ -12,6 +12,7 @@ jobs:
           - arch: x64
             runs_on: ubuntu-latest
             py_arch: x64
+            blender_version: "1.1.1"
             blender_arch: x64
             blender_platform: linux-x64
 
@@ -58,7 +59,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          ./blender/blender --command extension build --source-dir source --output-dir extension
+          ./blender/blender --command extension build --source-dir source --output-dir extension --output-filepath "parrotLipsync-${{ matrix.blender_version }}-windows-${{ matrix.arch }}.zip"
           echo "--blender extension ls--"
           ls extension
 

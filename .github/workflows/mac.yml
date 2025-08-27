@@ -73,8 +73,7 @@ jobs:
           cd ${{ github.workspace }}
           mkdir extension
           #"/Volumes/Blender/Blender.app/Contents/MacOS/Blender" --command extension build --source-dir source --output-dir extension
-          "/Volumes/Blender/Blender.app/Contents/MacOS/Blender" --command extension build --source-dir source --output-dir extension --output-filepath "parrotLipsync-${{ matrix.blender_version }}-windows-${{ matrix.arch }}.zip"
-
+          "/Volumes/Blender/Blender.app/Contents/MacOS/Blender" --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.blender_version }}-windows-${{ matrix.arch }}.zip"
           echo "--blender extension ls--"
           ls extension
 

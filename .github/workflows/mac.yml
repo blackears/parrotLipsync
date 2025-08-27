@@ -52,8 +52,8 @@ jobs:
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           hdiutil attach ${BLENDER_ARCHIVE}
-          echo "--ls /Volumes/${BLENDER_VOLUME}--"
-          ls /Volumes/${BLENDER_VOLUME}
+          echo "--ls /Volumes--"
+          ls /Volumes
 
 
 

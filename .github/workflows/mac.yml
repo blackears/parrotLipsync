@@ -66,9 +66,7 @@ jobs:
       - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
-          include-hidden-files: true
           name: parrotLipsync-${{ matrix.blender_version }}-macos-${{ matrix.arch }}
-          #path: ${{ github.workspace }}/extension/
           path: "extension/parrotLipsync-${{ matrix.blender_version }}-macos-${{ matrix.arch }}.zip"
           compression-level: 0
 

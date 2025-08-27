@@ -52,8 +52,8 @@ jobs:
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           hdiutil attach ${BLENDER_ARCHIVE}
-          echo "--ls /Volumes--"
-          ls /Volumes
+          echo "--ls /Volumes/Blender--"
+          ls /Volumes/Blender
 
 
 
@@ -70,8 +70,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          "/Volumes/${BLENDER_VOLUME}.app" --command extension build --source-dir source --output-dir extension
-          #./blender/blender --command extension build --source-dir source --output-dir extension
+          "/Volumes/Blender/Blender.app" --command extension build --source-dir source --output-dir extension
           echo "--blender extension ls--"
           ls extension
 

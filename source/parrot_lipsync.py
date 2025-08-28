@@ -143,13 +143,13 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
         # description="Language code of the audio being translated.  (Such as: en, fr, es, de, ja, ko, zh)",
         # default="en"
     # )
-    # key_interpolation: bpy.props.EnumProperty(
-        # name="Key Interpolation",
-        # items= [('constant', 'constant', 'constant interpolation'),
-               # ('linear', 'linear', 'linaer interpolation'),
-               # ('bezier', 'bezier', 'bezier interpolation'),],
-        # default='bezier'
-    # )
+    key_interpolation: bpy.props.EnumProperty(
+        name="Key Interpolation",
+        items= [('constant', 'constant', 'constant interpolation'),
+               ('linear', 'linear', 'linear interpolation'),
+               ('bezier', 'bezier', 'bezier interpolation'),],
+        default='bezier'
+    )
     phoneme_table_path: bpy.props.StringProperty(
         name="Phoneme table file",
         default='//phoneme_table_en.json',

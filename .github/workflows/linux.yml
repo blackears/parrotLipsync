@@ -10,7 +10,7 @@ jobs:
       matrix:
         include:
           - arch: x64
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-15
             py_arch: x64
             blender_version: "1.1.1"
             blender_arch: x64
@@ -22,10 +22,10 @@ jobs:
         with:
           submodules: recursive
         
-      - name: Setup Python 3.x
+      - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version: "3.11"
           architecture: ${{ matrix.py_arch }}  # x64 or arm64
 
       - name: Download Wheels

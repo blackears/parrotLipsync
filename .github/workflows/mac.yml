@@ -18,7 +18,7 @@ jobs:
           - arch: arm64
             runs_on: macos-15
             py_arch: arm64
-            blender_version: "1.1.1"
+            blender_version: "1.1.2"
             blender_arch: arm64
             blender_platform: macos-arm64
 

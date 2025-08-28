@@ -12,7 +12,7 @@ jobs:
           - arch: x64
             runs_on: windows-latest
             py_arch: x64
-            blender_version: "1.1.1"
+            blender_version: "1.1.2"
             blender_arch: x64
             blender_platform: windows-x64
           # - arch: arm64

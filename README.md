@@ -23,7 +23,7 @@ Parrot Lipsync relies on you having `ffmpeg` already installed on your computer.
 
 [Ffmpeg](https://ffmpeg.org/) is a popular library that lets you read and write many audio/video files.  It needs to be accessible from the command line.  
 
-The ffmpeg homepage offers installers for a variety of systems.  Alternately, you can use the below commands to install it from a terminal:
+[You can find installation  instructions on the ffmpeg website.](https://ffmpeg.org/)  Alternately, you can use the below commands to install it from a terminal:
 
 
 ```

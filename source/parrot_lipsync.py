@@ -222,6 +222,19 @@ class ParrotLipsyncProps(bpy.types.PropertyGroup):
     ) 
 
 #------------------------------------------
+# Tooltip operator
+
+class PLUGIN_OT_TooltipOperator(bpy.types.Operator):
+    bl_idname = "parrot.tooltip_operator"
+    bl_label = "Operator"
+    
+    tooltip: bpy.props.StringProperty()
+
+    @classmethod
+    def description(cls, context, operator):
+        return operator.tooltip
+    
+#------------------------------------------
 # Panel
 
 class PLUGIN_PT_ParrotLipsyncPanel(bpy.types.Panel):
@@ -281,6 +294,7 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
         for group_info in phoneme_table["groups"]:
             name = group_info["name"]
             group_hash[name] = group_info
+                    
         
         #print(group_hash)
         main_column = layout.column()
@@ -294,7 +308,16 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
             #print(group_hash)
             desc_text = group_hash[group]["description"] if group in group_hash else ""
             row.label(text = desc_text)
-            
+
+            info_text = ""
+            for phoneme in phoneme_table["phonemes"]:
+                if phoneme["group"] == group:
+                    info_text += phoneme["code"] + ": " + phoneme["example"] + "\n"
+
+            #op = layout.operator("parrot.tooltip_operator")
+            #op.tooltip = info_text
+            layout.operator("parrot.tooltip_operator").tooltip = info_text
+
             box.prop(pose_props, "pose")
         
             

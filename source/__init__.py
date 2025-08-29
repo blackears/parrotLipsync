@@ -23,6 +23,7 @@
 import bpy
 from .parrot_lipsync import ParrotPoseProps
 from .parrot_lipsync import ParrotLipsyncProps
+from .parrot_lipsync import PLUGIN_OT_TooltipOperator
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPanel
 from .parrot_lipsync import PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel
 from .parrot_lipsync import PLUGIN_OT_ParrotRenderLipsyncToAction
@@ -36,6 +37,7 @@ from .parrot_lipsync import PLUGIN_OT_ParrotReloadPhonemeTable
 _classes=[
     ParrotPoseProps,
     ParrotLipsyncProps,
+    PLUGIN_OT_TooltipOperator,
     PLUGIN_PT_ParrotLipsyncPanel,
     PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel,
     PLUGIN_OT_ParrotRenderLipsyncToAction,

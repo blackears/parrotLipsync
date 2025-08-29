@@ -10,7 +10,7 @@ jobs:
       matrix:
         include:
           - arch: x64
-            runs_on: windows-latest
+            runs_on: windows-2025
             py_arch: x64
             blender_version: "1.1.2"
             blender_arch: x64
@@ -37,7 +37,8 @@ jobs:
         run: |
           mkdir source/wheels
           # Optional, fail fast if no native wheel exists for this arch
-          pip wheel --prefer-binary -w source/wheels allosaurus
+          #pip wheel --prefer-binary -w source/wheels allosaurus
+          pip wheel -w source/wheels allosaurus
 
       - name: Create manifest
         run: |

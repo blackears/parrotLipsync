@@ -316,7 +316,9 @@ class PLUGIN_PT_ParrotLipsyncPhonemeGroupPanel(bpy.types.Panel):
 
             #op = layout.operator("parrot.tooltip_operator")
             #op.tooltip = info_text
-            layout.operator("parrot.tooltip_operator").tooltip = info_text
+            #row.operator("parrot.tooltip_operator").tooltip = info_text
+            op = row.operator("parrot.tooltip_operator", text="Hint")
+            op.tooltip = info_text
 
             box.prop(pose_props, "pose")
         

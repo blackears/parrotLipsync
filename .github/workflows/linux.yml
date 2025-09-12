@@ -10,7 +10,8 @@ jobs:
       matrix:
         include:
           - arch: x64
-            runs_on: ubuntu-latest
+#            runs_on: ubuntu-latest
+            runs_on: ubuntu-24.04
             py_arch: x64
             blender_version: "1.1.2"
             blender_arch: x64

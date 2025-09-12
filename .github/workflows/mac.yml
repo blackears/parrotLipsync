@@ -13,16 +13,14 @@ jobs:
             runs_on: macos-13
             py_arch: x64
             plugin_version: "1.1.2"
-            blender_vesion: "4.5.3"
+            blender_version: "4.5.3"
             blender_arch: x64
-            blender_platform: macos-x64
           - arch: arm64
             runs_on: macos-15
             py_arch: arm64
             plugin_version: "1.1.2"
-            blender_vesion: "4.5.3"
+            blender_version: "4.5.3"
             blender_arch: arm64
-            blender_platform: macos-arm64
 
     steps:
       - name: Checkout
@@ -50,7 +48,7 @@ jobs:
       - name: Setup Blender
         run: |
           cd ${{ github.workspace }}
-          BLENDER_VOLUME="blender-${{ matrix.blender_vesion }}-macos-${{ matrix.blender_arch }}"
+          BLENDER_VOLUME="blender-${{ matrix.blender_version }}-macos-${{ matrix.blender_arch }}"
           BLENDER_ARCHIVE="${BLENDER_VOLUME}.dmg"
           BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
@@ -62,7 +60,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          "/Volumes/Blender/Blender.app/Contents/MacOS/Blender" --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.blender_version }}-macos-${{ matrix.arch }}.zip"
+          "/Volumes/Blender/Blender.app/Contents/MacOS/Blender" --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}.zip"
 
       - name: Upload Package
         uses: actions/upload-artifact@v4

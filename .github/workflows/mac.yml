@@ -10,16 +10,16 @@ jobs:
       matrix:
         include:
           - arch: x64
-            runs_on: macos-13
+            runs_on: macos-15-intel
             py_arch: x64
-            plugin_version: "1.1.2"
-            blender_version: "4.5.3"
+            plugin_version: "1.1.3"
+            blender_version: "5.0.0"
             blender_arch: x64
           - arch: arm64
             runs_on: macos-15
             py_arch: arm64
-            plugin_version: "1.1.2"
-            blender_version: "4.5.3"
+            plugin_version: "1.1.3"
+            blender_version: "5.0.0"
             blender_arch: arm64
 
     steps:
@@ -50,7 +50,7 @@ jobs:
           cd ${{ github.workspace }}
           BLENDER_VOLUME="blender-${{ matrix.blender_version }}-macos-${{ matrix.blender_arch }}"
           BLENDER_ARCHIVE="${BLENDER_VOLUME}.dmg"
-          BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
+          BLENDER_URL="https://download.blender.org/release/Blender5.0/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           hdiutil attach ${BLENDER_ARCHIVE}
           echo "--ls /Volumes/Blender/Blender.app/Contents/MacOS--"

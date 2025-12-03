@@ -54,7 +54,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          ./blender/blender --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.blender_version }}-linux-${{ matrix.arch }}.zip"
+          ./blender/blender --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
           echo "--blender extension ls--"
           ls extension
 

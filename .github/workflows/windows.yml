@@ -65,7 +65,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir extension
-          .\blender\blender.exe --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.blender_version }}-windows-${{ matrix.arch }}.zip"
+          .\blender\blender.exe --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip"
           dir extension
 
       - name: Upload Package

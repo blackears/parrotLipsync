@@ -45,7 +45,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           BLENDER_ARCHIVE="blender-${{ matrix.blender_version }}-linux-${{ matrix.arch }}.tar.xz"
-          BLENDER_URL="https://download.blender.org/release/Blender4.5/${BLENDER_ARCHIVE}"
+          BLENDER_URL="https://download.blender.org/release/Blender5.0/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           tar -xf ${BLENDER_ARCHIVE}
           mv blender-${{ matrix.blender_version }}-linux-${{ matrix.arch }} blender 

@@ -28,10 +28,10 @@ jobs:
         with:
           submodules: recursive
         
-      - name: Setup Python 3.11
+      - name: Setup Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
           architecture: ${{ matrix.py_arch }}  # x64 or arm64
 
       - name: Download Wheels
@@ -55,7 +55,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           $BLENDER_DIR_NAME="blender-${{ matrix.blender_version }}-windows-${{ matrix.blender_arch }}"
-          $BLENDER_ARCHIVE="$BLENDER_DIR_NAME.zip"
+          $BLENDER_ARCHIVE="$BLENDER_DIR_NAME.zip"          
           $BLENDER_URL="https://download.blender.org/release/Blender5.0/$BLENDER_ARCHIVE"
           Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
           Expand-Archive -Path $BLENDER_ARCHIVE -DestinationPath .

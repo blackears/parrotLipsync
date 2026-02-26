@@ -591,7 +591,7 @@ class PLUGIN_OT_ParrotRenderLipsyncToRigNla(bpy.types.Operator):
         
         track_cache = {}
         
-        for seq in context.scene.sequence_editor.sequences_all:
+        for seq in context.scene.sequence_editor.strips_all:
             if seq.type != 'SOUND' or not seq.select:
                 continue
             

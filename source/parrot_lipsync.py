@@ -20,13 +20,13 @@
 # SOFTWARE.
 
 import bpy
+import bpy_extras
 import subprocess
 import sys
 import os
 import site
 import hashlib
 import importlib
-import itertools
 import mathutils
 import numpy as np
 from allosaurus.app import read_recognizer
@@ -502,9 +502,21 @@ def render_lipsync_to_action(context, tgt_action, seq):
     
 
     #Clear existing animation
-    tgt_action.fcurves.clear()
+    
+    if not "parrot_lipsync" in tgt_action.slots:
+        action_slot = tgt_action.slots.new(id_type="OBJECT", name="parrot_lipsync")
+    else:
+        action_slot = tgt_action.slots["parrot_lipsync"]
+
     for marker in tgt_action.pose_markers.values():
         tgt_action.pose_markers.remove(marker)
+
+    tgt_channelbag = bpy_extras.anim_utils.action_get_channelbag_for_slot(tgt_action, action_slot)
+    if not tgt_channelbag:
+        tgt_channelbag = bpy_extras.anim_utils.action_ensure_channelbag_for_slot(tgt_action, action_slot)
+
+    #found_fcurve = channelbag.fcurves.find("location", index=2)
+    tgt_channelbag.fcurves.clear()
 
     #Write tracks
     for idx, phone_timing in enumerate(groups_seq):
@@ -523,22 +535,30 @@ def render_lipsync_to_action(context, tgt_action, seq):
         marker.frame = int(time * fps)
         
         #Ensure groups are present
-        for src_group in src_action.groups:
-            if not src_group.name in tgt_action.groups:
-                tgt_action.groups.new(src_group.name)
+        # for src_group in src_action.groups:
+        #     if not src_group.name in tgt_action.groups:
+        #         tgt_action.groups.new(src_group.name)
 
+        if len(src_action.slots) == 0:
+            continue
 
-        for src_curve in src_action.fcurves:
+#        src_action_slot = src_action.slots.active
+        src_action_slot = src_action.slots[0]
+        src_channelbag = bpy_extras.anim_utils.action_get_channelbag_for_slot(src_action, src_action_slot)
+        if not src_channelbag:
+            continue
+
+        for src_curve in src_channelbag.fcurves:
             #print("src_curve.data_path ", src_curve.data_path, src_curve.array_index)
             
             if src_curve.is_empty:
                 continue
 
-            tgt_curve = tgt_action.fcurves.find(src_curve.data_path, index = src_curve.array_index)
+            tgt_curve = tgt_channelbag.fcurves.find(src_curve.data_path, index = src_curve.array_index)
             if not tgt_curve:
-                tgt_curve = tgt_action.fcurves.new(src_curve.data_path, index = src_curve.array_index)
-                if src_curve.group:
-                    tgt_curve.group = tgt_action.groups[src_curve.group.name]
+                tgt_curve = tgt_channelbag.fcurves.new(src_curve.data_path, index = src_curve.array_index)
+                # if src_curve.group:
+                #     tgt_curve.group = tgt_action.groups[src_curve.group.name]
             
             frame_range = src_action.curve_frame_range
             #print("range ", range)

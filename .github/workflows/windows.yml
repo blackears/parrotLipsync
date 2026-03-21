@@ -47,7 +47,7 @@ jobs:
           Copy-Item -Path "..\blender_manifest_template_windows.toml" -Destination "blender_manifest.toml"
           $out = "blender_manifest.toml"
           Add-Content $out "wheels = ["
-          Get-ChildItem .\wheels -File | ForEach-Object { "  `"./wheels/$($_.Name)`"," } | Add-Content $out
+          Get-ChildItem .\wheels -File -Exclude "*numpy*" | ForEach-Object { "  `"./wheels/$($_.Name)`"," } | Add-Content $out
           Add-Content $out -Value "]"
           Get-Content $out
 

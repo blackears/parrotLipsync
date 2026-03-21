@@ -13,7 +13,7 @@ jobs:
             runs_on: windows-2025
             py_arch: x64
             plugin_version: "1.1.4"
-            blender_version: "5.0.0"
+            blender_version: "5.1.0"
             blender_arch: x64
             blender_platform: windows-x64
           # - arch: arm64
@@ -56,7 +56,7 @@ jobs:
           cd ${{ github.workspace }}
           $BLENDER_DIR_NAME="blender-${{ matrix.blender_version }}-windows-${{ matrix.blender_arch }}"
           $BLENDER_ARCHIVE="$BLENDER_DIR_NAME.zip"          
-          $BLENDER_URL="https://download.blender.org/release/Blender5.0/$BLENDER_ARCHIVE"
+          $BLENDER_URL="https://download.blender.org/release/Blender5.1/$BLENDER_ARCHIVE"
           Invoke-WebRequest $BLENDER_URL -OutFile $BLENDER_ARCHIVE
           Expand-Archive -Path $BLENDER_ARCHIVE -DestinationPath .
           Rename-Item -Path $BLENDER_DIR_NAME -NewName blender
@@ -66,12 +66,14 @@ jobs:
           cd ${{ github.workspace }}
           mkdir extension
           .\blender\blender.exe --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip"
-          dir extension
+          cd extension
+          dir
+          unzip "parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip"
 
       - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}
-          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip"
+          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}"
           compression-level: 0
 

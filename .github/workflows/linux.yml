@@ -14,7 +14,7 @@ jobs:
             runs_on: ubuntu-24.04
             py_arch: x64
             plugin_version: "1.1.4"
-            blender_version: "5.0.0"
+            blender_version: "5.1.0"
             blender_arch: x64
             blender_platform: linux-x64
 
@@ -45,7 +45,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           BLENDER_ARCHIVE="blender-${{ matrix.blender_version }}-linux-${{ matrix.arch }}.tar.xz"
-          BLENDER_URL="https://download.blender.org/release/Blender5.0/${BLENDER_ARCHIVE}"
+          BLENDER_URL="https://download.blender.org/release/Blender5.1/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           tar -xf ${BLENDER_ARCHIVE}
           mv blender-${{ matrix.blender_version }}-linux-${{ matrix.arch }} blender 
@@ -55,6 +55,8 @@ jobs:
           cd ${{ github.workspace }}
           mkdir extension
           ./blender/blender --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
+          cd extension
+          unzip "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
           echo "--blender extension ls--"
           ls extension
 
@@ -62,7 +64,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}
-          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
+          path: "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}"
+          #path: "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
           compression-level: 0
 
 

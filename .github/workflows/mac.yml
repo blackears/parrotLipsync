@@ -13,23 +13,23 @@ jobs:
             runs_on: macos-15-intel
             py_arch: x64
             plugin_version: "1.1.4"
-            blender_version: "5.0.0"
+            blender_version: "5.1.0"
             blender_arch: x64
           - arch: arm64
             runs_on: macos-15
             py_arch: arm64
             plugin_version: "1.1.4"
-            blender_version: "5.0.0"
+            blender_version: "5.1.0"
             blender_arch: arm64
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
         
       - name: Setup Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           architecture: ${{ matrix.py_arch }}  # x64 or arm64
@@ -50,7 +50,7 @@ jobs:
           cd ${{ github.workspace }}
           BLENDER_VOLUME="blender-${{ matrix.blender_version }}-macos-${{ matrix.blender_arch }}"
           BLENDER_ARCHIVE="${BLENDER_VOLUME}.dmg"
-          BLENDER_URL="https://download.blender.org/release/Blender5.0/${BLENDER_ARCHIVE}"
+          BLENDER_URL="https://download.blender.org/release/Blender5.1/${BLENDER_ARCHIVE}"
           curl -L ${BLENDER_URL} -o ${BLENDER_ARCHIVE}
           hdiutil attach ${BLENDER_ARCHIVE}
           echo "--ls /Volumes/Blender/Blender.app/Contents/MacOS--"
@@ -63,30 +63,8 @@ jobs:
           "/Volumes/Blender/Blender.app/Contents/MacOS/Blender" --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}.zip"
 
       - name: Upload Package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}
           path: "extension/parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}.zip"
           compression-level: 0
-
-      # - name: Create Release
-      #   id: create_release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: ${{ github.ref }}
-      #     release_name: Release ${{ github.ref }}
-      #     draft: false
-      #     prerelease: false
-
-      # - name: Upload Release Asset
-      #   id: upload-release-asset 
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-      #     asset_path: ./my-artifact.zip
-      #     asset_name: my-artifact.zip
-      #     asset_content_type: application/zip

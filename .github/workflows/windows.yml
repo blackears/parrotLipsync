@@ -24,12 +24,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
         
       - name: Setup Python 3.13
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           architecture: ${{ matrix.py_arch }}  # x64 or arm64
@@ -67,11 +67,11 @@ jobs:
           mkdir extension
           .\blender\blender.exe --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip"
           cd extension
+          Expand-Archive -Path "parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip" -DestinationPath .
           dir
-          unzip "parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip"
 
       - name: Upload Package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}
           path: "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}"

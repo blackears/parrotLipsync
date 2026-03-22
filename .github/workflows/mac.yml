@@ -43,7 +43,7 @@ jobs:
       - name: Create manifest
         run: |
           cd source
-          (cat ../blender_manifest_template_mac.toml; echo "wheels = ["; ls -1 wheels | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
+          (cat ../blender_manifest_template_mac.toml; echo "wheels = ["; ls -1 wheels | grep -v "numpy" | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
 
       - name: Setup Blender
         run: |
@@ -69,4 +69,3 @@ jobs:
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}
           path: "extension/parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
-          compression-level: 0

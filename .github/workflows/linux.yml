@@ -39,7 +39,7 @@ jobs:
       - name: Create manifest
         run: |
           cd source
-          (cat ../blender_manifest_template_linux.toml; echo "wheels = ["; ls -1 wheels | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
+          (cat ../blender_manifest_template_linux.toml; echo "wheels = ["; ls -1 wheels | grep -v "numpy" | sed 's/\(^.*$\)/  "\.\/wheels\/\1",/'; echo "]") > blender_manifest.toml
 
       - name: Setup Blender
         run: |
@@ -56,7 +56,7 @@ jobs:
           mkdir extension
           ./blender/blender --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
           cd extension
-          unzip "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
+          unzip "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip" -d "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
           echo "--blender extension ls--"
           ls extension
 
@@ -64,8 +64,6 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}
-          path: "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}"
-          #path: "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
-          compression-level: 0
+          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
 
 

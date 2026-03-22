@@ -75,5 +75,4 @@ jobs:
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}-blender_${{ matrix.blender_version }}
           path: "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
-          compression-level: 0
 

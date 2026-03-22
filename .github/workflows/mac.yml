@@ -67,5 +67,5 @@ jobs:
       - name: Upload Package
         uses: actions/upload-artifact@v6
         with:
-          name: parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}
+          name: parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}-blender_${{ matrix.blender_version }}
           path: "extension/parrotLipsync-${{ matrix.plugin_version }}-macos-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"

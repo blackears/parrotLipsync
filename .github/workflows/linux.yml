@@ -56,14 +56,14 @@ jobs:
           mkdir extension
           ./blender/blender --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip"
           cd extension
-          unzip "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip" -d "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
+          unzip "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}.zip" -d "parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}"
           echo "--blender extension ls--"
           ls extension
 
       - name: Upload Package
         uses: actions/upload-artifact@v6
         with:
-          name: parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}
-          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
+          name: parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}-blender_${{ matrix.blender_version }}
+          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-linux-${{ matrix.arch }}"
 
 

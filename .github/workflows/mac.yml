@@ -9,12 +9,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: x64
-            runs_on: macos-15-intel
-            py_arch: x64
-            plugin_version: "1.1.4"
-            blender_version: "5.1.0"
-            blender_arch: x64
+          # - arch: x64
+          #   runs_on: macos-15-intel
+          #   py_arch: x64
+          #   plugin_version: "1.1.4"
+          #   blender_version: "5.1.0"
+          #   blender_arch: x64
           - arch: arm64
             runs_on: macos-15
             py_arch: arm64

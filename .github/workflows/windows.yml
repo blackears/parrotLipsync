@@ -67,12 +67,12 @@ jobs:
           mkdir extension
           .\blender\blender.exe --command extension build --source-dir source --output-filepath "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip"
           cd extension
-          Expand-Archive -Path "parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip" -DestinationPath "parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
+          Expand-Archive -Path "parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}.zip" -DestinationPath "parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}"
           dir
 
       - name: Upload Package
         uses: actions/upload-artifact@v6
         with:
           name: parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}-blender_${{ matrix.blender_version }}
-          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}-blender_${{ matrix.blender_version }}"
+          path: "extension/parrotLipsync-${{ matrix.plugin_version }}-windows-${{ matrix.arch }}"
 

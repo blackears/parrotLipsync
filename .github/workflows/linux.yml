@@ -24,10 +24,10 @@ jobs:
         with:
           submodules: recursive
         
-      - name: Setup Python 3.13
+      - name: Setup Python 3.14
         uses: actions/setup-python@v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           architecture: ${{ matrix.py_arch }}  # x64 or arm64
 
       - name: Download Wheels

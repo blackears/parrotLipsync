@@ -52,7 +52,7 @@ scoop install ffmpeg
 
 #### Installing the Parrot Lipsync extension
 
-Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Preferences > Addons` tab, clicking the downward pointing arrow button in the top right corner and selecting `Install from Disk...`.  Browse to the Parrot Lipsync zip file you downloaded and select it.  Finally, make sure the check mark next to `View 3D: Parrot Lipsync` is checked so that the extension is activated.
+Now that ffmpeg is installed, you can install Parrot by opening the `Edit > Preferences > Get Extensions` tab, clicking the downward pointing arrow button in the top right corner and selecting `Install from Disk...`.  Browse to the Parrot Lipsync zip file you downloaded and select it.
 
 
 ## Usage
@@ -149,13 +149,8 @@ bpy.ops.wm.save_as_mainfile(filepath="//headless_result.blend")
 
 ## Building
 
-A `make.py` file is included in the root directory.  You must have downloaded the necessary wheels and put them in `./source/wheels` first.  (The wheels are not included in this repo because they are several gigabytes in size all together and some are platform specific.)  You must also have Blender 4.2 or higher installed and in your path.  
+Parrot Lipsync is now being built using ![workflow scripts](https://github.com/blackears/parrotLipsync/tree/master/.github/workflows) that run on Github's servers.  You can download built versions of parrot form the ![releases](https://github.com/blackears/parrotLipsync/releases) page.  The linux version is huge, so it can't be kept on the main releases page, but there should be instructions there on how to download it.  You can also purchase a copy from ![SuperHive](https://superhivemarket.com/products/parrot-lipsync) if you want to help support the project.
 
-The Parrot Lipsync extension can be built by being in the root directory and running the command
-
-```python ./make.py -e```
-
-This will place the built zipfiles in the `./extensions` directory.
 
 ### Getting the wheels
 

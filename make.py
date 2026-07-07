@@ -15,102 +15,96 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import getopt
 import platform
-import subprocess
-import pip
-import sys
 import os
-import shutil
+import sys
+import subprocess
+import urllib.request
+import zipfile
+import tarfile
 
-#projectName = 'parrotLipsync'
+platform_sys = platform.system()
 
-platforms = ["macosx_11_0_arm64", "manylinux_2_28_x86_64", "win_amd64", "manylinux_2_17_x86_64"]
-#platforms = ["macosx_11_0_arm64", "manylinux_2_17_x86_64", "win_amd64"]
+wheels_dir = "build/source/wheels"
+build_dir = "build/source"
+BLENDER_ARCHIVE = "blender-5.1.2-linux-x64.tar.gz"
 
-python_modules = [
-"allosaurus",
+if platform_sys == 'Windows':
+    pass
+elif platform_sys == 'Linux':
+    if not os.path.exists("build"):
+        os.makedirs("build")
+    os.chdir("build")
 
-]
-
-# wheels_no_deps = [
-    # "allosaurus", "resampy", "panphon", "requests", "tqdm",    
-    # "filelock", "fsspec", "jinja2", "mpmath", "munkres", "networkx", "panphon", 
-# ]
-
-# wheels_bin = [
-    # "scipy", "torch", "editdistance", 
-    # "editdistance", "llvmlite", "MarkupSafe", "numba", 
-# ]
-
-# wheels_bin = [
-    # ["allosaurus", "--no-deps", "macosx_14_0_arm64"],
-    # ["scipy", "--only-binary=:all:", "macosx_14_0_arm64"],
-# ]
-
-#https://files.pythonhosted.org/packages/07/85/3ef1d2f70736bef5650c7fedbf4d4e01efe728f10bad0294a9a8d396ff00/allosaurus-1.0.2-py3-none-any.whl
-
-#pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_arm64
-#pip download scipy --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_14_0_x86_64
-
-#pip download torch --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_11_0_arm64
-#pip download editdistance --dest ./wheels-extra-mac --only-binary=:all: --platform=macosx_11_0_arm64
-
-def print_wheel_list():
-    for f in os.listdir("source/wheels"):
-        filename = os.fsdecode(f)
-        print("    \"./wheels/" + filename.strip() + "\",")
-
-def build_wheels():
-    if True:
-        #Currently not working
-        #https://projects.blender.org/blender/blender/issues/127632
-        return
+    if not os.path.exists(wheels_dir):
+        os.makedirs(wheels_dir)
     
-    curPath = os.getcwd()
-    if os.path.exists('source/wheels'):
-        shutil.rmtree('source/wheels')
-    os.mkdir('source/wheels')
-    
-    for plat in platforms:
-        for module in python_modules:
-            #pip.main(["download", module, "--dest", "source/wheels", "--only-binary=:all:", "--python-version=3.11", "--platform=" + plat])
+    #Download wheels
+    command = [
+            sys.executable, "-m", "pip", "download",
+            #"--only-binary=:all:",  # Force downloading wheels only (.whl)
+            "--dest", wheels_dir,   # Specify target directory
+            "allosaurus"
+        ]    
 
-            subprocess.call(["pip", module, "numba", "-w", "source/wheels2"])
-#            subprocess.call(["python", "-m", "pip", "wheel", "--wheel-dir", "source/wheels", "--only-binary=:all:", module])
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while downloading: {e.stderr}")
+
+    #Build manifest
+    os.chdir("source")
+
+    manifest_text = ""
+    with open("../blender_manifest_template_linux.toml", "r") as file:
+        for line in file:
+            if line.startswith("numpy"):
+                continue
             
+            manifest_text += line
 
-def build_extension():
-    curPath = os.getcwd()
-    if os.path.exists('extension'):
-        shutil.rmtree('extension')
-    os.mkdir('extension')
+    with open("blender_manifest.toml", "w", encoding="utf-8") as file:
+        file.write(manifest_text)
+
+    #Download blender
+    if not os.path.exists("blender"):
+        os.makedirs("blender")
+
+    urllib.request.urlretrieve("https://download.blender.org/release/Blender5.1/${BLENDER_ARCHIVE}", "blender/blender.tar.gz")
+
+    #Unzip Blender
+    # with zipfile.ZipFile("blender.tar.gz", 'r') as zip_ref:
+    #     zip_ref.extractall("blender_dir")
+
+    with tarfile.open("blender.tar.gz", "r:gz") as tar:
+        # Extract all contents into the current directory
+        tar.extractall(path="blender_dir")
+
+    if not os.path.exists("extension"):
+        os.makedirs("extension")
     
-    subprocess.call(["blender", "--command", "extension", "build", "--split-platforms", "--source-dir", "source", "--output-dir", "extension"])
+    #Build extension
+    command = [
+            "blender_dir/blender", 
+            "--command", "extension", 
+            "build",
+            "--source-dir", "source",
+            "--output-filepath", "extension/parrotLipsync.zip",
+        ]    
+
+    try:
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while downloading: {e.stderr}")
+
+
+    pass
+
+elif platform_sys == 'Darwin':
+    #Macintosh
+    pass
+
+
+    
+    
  
-#pip wheel numba -w .
-#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=macosx_11_0_arm64
-#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=manylinux_2_28_x86_64
-#pip download pillow --dest ./wheels --only-binary=:all: --python-version=3.11 --platform=win_amd64 --platform=macosx_11_0_arm64
-
-#blender --command extension build --split-platforms
-
-def install_extension():
-    subprocess.call(["blender", "--command", "extension", "install-file", "--enable", "--repo", "user_default",  "extension/parrot_lipsync-1.1.1-windows_x64.zip"])
-
-
-if __name__ == '__main__':
-    copyToBlenderAddons = False
-    createArchive = False
-
-    for arg in sys.argv[1:]:
-        if arg == "-w":
-            build_wheels()
-        if arg == "-l":
-            print_wheel_list()
-        if arg == "-e":
-            build_extension()
-        if arg == "-i":
-            install_extension()
-
-            
